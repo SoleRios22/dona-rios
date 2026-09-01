@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+:root {
+  --color-cream: #fbf6ea;
+  --color-cream-2: #f3ebd8;
+  --color-avocado: #5c7a3f;
+  --color-avocado-dark: #3e5429;
+  --color-forest: #2b3620;
+  --color-leaf-light: #a9c17a;
+  --color-honey: #c8973c;
+  --color-honey-dark: #a87a28;
+  --color-clay: #8b4a2b;
+  --color-clay-light: #b97a52;
+  --color-line: rgba(43, 54, 32, 0.12);
+}
+
+@theme inline {
+  --color-cream: var(--color-cream);
+  --color-cream-2: var(--color-cream-2);
+  --color-avocado: var(--color-avocado);
+  --color-avocado-dark: var(--color-avocado-dark);
+  --color-forest: var(--color-forest);
+  --color-leaf-light: var(--color-leaf-light);
+  --color-honey: var(--color-honey);
+  --color-honey-dark: var(--color-honey-dark);
+  --color-clay: var(--color-clay);
+  --color-clay-light: var(--color-clay-light);
+  --color-line: var(--color-line);
+
+  --font-display: "Fraunces", serif;
+  --font-body: "Work Sans", sans-serif;
+  --font-script: "Caveat", cursive;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-forest);
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* Boton "pisado" con sombra solida, consistente con los mockups */
+.btn-pressed {
+  box-shadow: 0 6px 0 var(--shadow-color, var(--color-avocado-dark));
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-pressed:hover {
+  transform: translateY(-2px);
+}
+.btn-pressed:active {
+  transform: translateY(2px);
+  box-shadow: 0 3px 0 var(--shadow-color, var(--color-avocado-dark));
+}

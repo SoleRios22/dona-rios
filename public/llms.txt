@@ -1,0 +1,22 @@
+# Doña Ríos — Almacén Saludable
+
+> Tienda online de productos keto, low carb y sin gluten en Río Cuarto, Córdoba, Argentina.
+> No fabrican productos: seleccionan y curan productos de terceros que cumplen criterios
+> claros (composición nutricional, ausencia de azúcares agregadas, aptitud sin gluten, etc.).
+> Operan 100% online, sin local físico: envío a domicilio en Río Cuarto o retiro coordinado.
+> Los pedidos se confirman por WhatsApp.
+
+## Páginas principales
+
+- [Inicio](/): selección destacada y boxes armados
+- [Keto](/categoria/keto), [Low carb](/categoria/low-carb), [Sin gluten](/categoria/sin-gluten),
+  [Sin azúcar](/categoria/sin-azucar), [Selección Doña Ríos](/categoria/seleccion): catálogo por categoría
+- [Guías](/guias): explicaciones de conceptos de nutrición (keto vs. low carb, azúcar agregada,
+  grasas, gluten, índice glucémico) usados como criterio de selección
+- [Contacto](/contacto): formulario para consultas que no son pedidos
+
+## Contacto
+
+- WhatsApp: +54 9 358 431-5332
+- Instagram: @donarios_almacensaludable
+- Zona de cobertura: Río Cuarto, Córdoba, Argentina
