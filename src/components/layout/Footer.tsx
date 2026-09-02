@@ -118,10 +118,14 @@ export default async function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-between gap-2 border-t border-white/10 pt-6 text-xs text-[#93A084] md:flex-row">
-          <span>© {new Date().getFullYear()} Doña Ríos — Almacén Saludable</span>
-          <span>No vendemos de todo. Elegimos lo mejor.</span>
-        </div>
+       <div className="flex flex-col justify-between gap-2 border-t border-white/10 pt-6 text-xs text-[#93A084] md:flex-row">
+  <span>© {new Date().getFullYear()} Doña Ríos — Almacén Saludable</span>
+  <span>No vendemos de todo. Elegimos lo mejor.</span>
+  <Link href="/privacidad" className="hover:text-cream">
+    Política de privacidad
+  </Link>
+</div>
+        
       </div>
     </footer>
   );
