@@ -27,13 +27,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     );
   }
 
-  const navLinks = [
-    { href: "/admin", label: "Productos" },
-    { href: "/admin/pedidos", label: "Pedidos" },
-    { href: "/admin/subcategorias", label: "Subcategorías" },
-    { href: "/admin/mensajes", label: "Mensajes" },
-    { href: "/admin/productos/nuevo", label: "+ Nuevo producto" },
-  ];
+ const navLinks = [
+  { href: "/admin", label: "Panel" },
+  { href: "/admin/productos", label: "Productos" },
+  { href: "/admin/pedidos", label: "Pedidos" },
+  { href: "/admin/subcategorias", label: "Subcategorías" },
+  { href: "/admin/mensajes", label: "Mensajes" },
+  { href: "/admin/productos/nuevo", label: "+ Nuevo producto" },
+];
 
   return (
     <div className="mx-auto max-w-[1180px] px-6 py-6 md:flex md:gap-10 md:py-8 md:px-8">

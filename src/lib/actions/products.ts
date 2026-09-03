@@ -50,6 +50,20 @@ export async function getAllProductsForAdmin() {
 
   return data ?? [];
 }
+// Para el dashboard: productos activos con poco stock (umbral configurable).
+export async function getLowStockProducts(threshold = 5) {
+  const { supabase, ok } = await requireAdmin();
+  if (!ok) return [];
+
+  const { data } = await supabase
+    .from("products")
+    .select("id, name, stock")
+    .eq("is_active", true)
+    .lte("stock", threshold)
+    .order("stock", { ascending: true });
+
+  return data ?? [];
+}
 
 export async function getProductForEdit(id: string) {
   const { supabase, ok } = await requireAdmin();
@@ -97,6 +111,7 @@ export async function createProduct(input: ProductFormInput) {
 
   await saveRelations(supabase, product.id, input);
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   return { error: null, id: product.id };
 }
 
@@ -133,6 +148,7 @@ export async function updateProduct(id: string, input: ProductFormInput) {
   await saveRelations(supabase, id, input);
 
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   revalidatePath(`/producto/${input.slug}`);
   return { error: null, id };
 }
@@ -180,6 +196,7 @@ export async function deleteProduct(id: string) {
   if (deleteError) return { error: "No se pudo eliminar el producto." };
 
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   return { error: null };
 }
 
@@ -189,5 +206,6 @@ export async function toggleProductActive(id: string, isActive: boolean) {
 
   await supabase.from("products").update({ is_active: isActive }).eq("id", id);
   revalidatePath("/admin");
+  revalidatePath("/admin/productos");
   return { error: null };
 }

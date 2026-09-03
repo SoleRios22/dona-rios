@@ -173,7 +173,24 @@ export async function updateOrderStatus(orderId: string, status: "pendiente" | "
   }
 
   revalidatePath("/admin/pedidos");
+ 
   revalidatePath("/admin");
+  
   revalidatePath("/pedidos");
+
   return { error: null };
+}
+// Para el dashboard: cantidad de pedidos pendientes + los últimos, sin traer todo el historial.
+export async function getPendingOrdersSummary(limit = 5) {
+  const supabase = await createClient();
+  if (!(await requireAdminForOrders(supabase))) return { count: 0, recent: [] };
+
+  const { data, count } = await supabase
+    .from("orders")
+    .select("id, total, created_at, profiles(full_name)", { count: "exact" })
+    .eq("status", "pendiente")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  return { count: count ?? 0, recent: data ?? [] };
 }
