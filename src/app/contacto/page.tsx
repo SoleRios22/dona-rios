@@ -1,8 +1,11 @@
 import ContactForm from "@/components/ContactForm";
+import Breadcrumb from "@/components/Breadcrumb";
 
 export default function ContactPage() {
   return (
+
     <div className="mx-auto max-w-[720px] px-6 py-12 md:px-8">
+      <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "Contacto" }]} />
       <p className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-avocado-dark">
         <span className="h-0.5 w-4 rounded bg-honey" /> Contacto
       </p>

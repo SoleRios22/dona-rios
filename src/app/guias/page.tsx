@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import JsonLd from "@/components/JsonLd";
 import { SITE_URL } from "@/lib/constants";
-
+import Breadcrumb from "@/components/Breadcrumb";
 interface Guide {
   emoji: string;
   title: string;
@@ -69,6 +69,7 @@ const faqJsonLd = {
 export default function GuidesPage() {
   return (
     <div className="mx-auto max-w-[880px] px-6 py-12 md:px-8">
+      <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "Guías" }]} />
       <JsonLd data={faqJsonLd} />
       <JsonLd
         data={{

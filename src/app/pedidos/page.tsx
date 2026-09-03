@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getOrderHistory } from "@/lib/actions/orders";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { OrderStatus } from "@/types/database";
+import Breadcrumb from "@/components/Breadcrumb";
 
 const STATUS_LABELS: Record<OrderStatus, { label: string; className: string }> = {
   pendiente: { label: "Pendiente de confirmar", className: "bg-honey/20 text-honey-dark" },
@@ -23,6 +24,7 @@ export default async function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-[840px] px-6 py-10 md:px-8">
+      <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "Tus pedidos" }]} />
       <h1 className="mb-1 text-3xl">Tus pedidos</h1>
       <p className="mb-8 text-sm text-forest/60">Historial de todo lo que pediste en Doña Ríos</p>
 

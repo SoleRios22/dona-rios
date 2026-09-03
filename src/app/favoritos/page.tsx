@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getFavoriteProductIds } from "@/lib/actions/favorites";
 import { getFavoriteProducts } from "@/lib/data/products";
 import ProductCard from "@/components/ProductCard";
+import Breadcrumb from "@/components/Breadcrumb"
 
 export default async function FavoritesPage() {
   const supabase = await createClient();
@@ -18,6 +19,7 @@ export default async function FavoritesPage() {
 
   return (
     <div className="mx-auto max-w-[1180px] px-6 py-10 md:px-8">
+      <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "Tus favoritos" }]} />
       <h1 className="mb-1 text-3xl">Tus favoritos</h1>
       <p className="mb-8 text-sm text-forest/60">
         {products.length} producto{products.length !== 1 ? "s" : ""} guardado{products.length !== 1 ? "s" : ""}

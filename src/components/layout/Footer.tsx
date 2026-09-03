@@ -69,6 +69,11 @@ export default async function Footer() {
           <div>
             <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-[#D8DFC8]">Contacto</h3>
             <ul className="flex flex-col gap-2.5 text-sm text-[#C7D1B4]">
+               <li>
+              <Link href="/sobre-nosotros"  className="hover:text-cream">
+                Sobre nosotros
+                </Link>
+              </li>
               <li>
                 <Link href="/contacto" className="hover:text-cream">
                   Formulario de contacto
@@ -124,6 +129,9 @@ export default async function Footer() {
   <Link href="/privacidad" className="hover:text-cream">
     Política de privacidad
   </Link>
+  <Link href="/terminos" className="hover:text-cream">
+  Términos y condiciones
+</Link>
 </div>
         
       </div>

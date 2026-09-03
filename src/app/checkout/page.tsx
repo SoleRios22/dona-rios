@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCart } from "@/lib/actions/cart";
 import CheckoutForm from "@/components/checkout/CheckoutForm";
+import Breadcrumb from "@/components/Breadcrumb"
 
 interface CartProductJoin {
   name: string;
@@ -35,6 +36,7 @@ export default async function CheckoutPage() {
 
   return (
     <div className="mx-auto max-w-[1100px] px-6 py-10 md:px-8">
+      <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "Carrito", href: "/carrito" }, { label: "Finalizar pedido" }]} />
       <h1 className="mb-1 text-3xl">Finalizar pedido</h1>
       <p className="mb-8 text-sm text-forest/60">Últimos datos y coordinamos el resto por WhatsApp</p>
       <CheckoutForm lines={lines} subtotal={subtotal} />
