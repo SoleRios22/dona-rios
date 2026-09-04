@@ -3,6 +3,7 @@ import { getProducts } from "@/lib/data/products";
 import { getFavoriteProductIds } from "@/lib/actions/favorites";
 import ProductCard from "@/components/ProductCard";
 import { CATEGORY_LABELS, type CategoryTag } from "@/types/database";
+import ConstructionBadge from "@/components/ConstructionBadge";
 
 const CATEGORY_STRIP: CategoryTag[] = ["keto", "low-carb", "sin-gluten", "sin-azucar", "seleccion"];
 
@@ -14,6 +15,7 @@ export default async function HomePage() {
   return (
     <div>
       {/* HERO */}
+       <ConstructionBadge />
       <section className="px-6 pt-14 pb-6 md:px-8 md:pt-20">
         <div className="mx-auto grid max-w-[1180px] items-center gap-10 md:grid-cols-2 md:gap-12">
           <div>
