@@ -5,7 +5,7 @@ export const CATEGORY_LABELS: Record<CategoryTag, { label: string; emoji: string
   "low-carb": { label: "Low carb", emoji: "🌱" },
   "sin-gluten": { label: "Sin gluten", emoji: "🌾" },
   "sin-azucar": { label: "Sin azúcar", emoji: "💚" },
-  seleccion: { label: "Selección Doña Ríos", emoji: "⭐" },
+  seleccion: { label: "Selección DR", emoji: "⭐" },
 };
 
 export type UserRole = "customer" | "admin";
@@ -178,6 +178,7 @@ export interface ProductWithRelations {
   colorway: string;
   is_box: boolean;
   stock: number;
+  image_url: string | null;
   tags: CategoryTag[];
   subcategories: { id: string; name: string; slug: string }[];
   variants: { id: string; label: string; price_delta: number; is_default: boolean }[];

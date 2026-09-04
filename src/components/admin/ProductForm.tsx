@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createProduct, updateProduct, type ProductFormInput } from "@/lib/actions/products";
 import { CATEGORY_LABELS, type CategoryTag, type Subcategory } from "@/types/database";
 import { slugify } from "@/lib/utils/slugify";
+import ImageUploader from "@/components/admin/ImageUploader";
 
 interface Props {
   mode: "create" | "edit";
@@ -37,6 +38,7 @@ export default function ProductForm({ mode, productId, initial, availableSubcate
   const [origin, setOrigin] = useState(initial?.origin ?? "");
   const [suitableFor, setSuitableFor] = useState(initial?.suitableFor ?? "");
   const [colorway, setColorway] = useState(initial?.colorway ?? "clay");
+  const [imageUrl, setImageUrl] = useState<string | null>(initial?.imageUrl ?? null);
   const [isBox, setIsBox] = useState(initial?.isBox ?? false);
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
   const [stock, setStock] = useState(initial?.stock?.toString() ?? "0");
@@ -98,6 +100,7 @@ export default function ProductForm({ mode, productId, initial, availableSubcate
       origin: origin.trim(),
       suitableFor: suitableFor.trim(),
       colorway,
+      imageUrl,
       isBox,
       isActive,
       stock: Number(stock) || 0,
@@ -297,15 +300,10 @@ export default function ProductForm({ mode, productId, initial, availableSubcate
         </div>
       </Section>
 
-      <Section title="Más datos">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Origen">
-            <input value={origin} onChange={(e) => setOrigin(e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Apto para">
-            <input value={suitableFor} onChange={(e) => setSuitableFor(e.target.value)} className={inputClass} />
-          </Field>
-          <Field label="Color del mock (ilustración)">
+      <Section title="Imagen">
+        <ImageUploader value={imageUrl} onChange={setImageUrl} colorway={colorway} isBox={isBox} />
+        <div className="mt-5">
+          <Field label="Color de la ilustración (si no subís imagen)">
             <select value={colorway} onChange={(e) => setColorway(e.target.value)} className={inputClass}>
               {COLORWAYS.map((c) => (
                 <option key={c.value} value={c.value}>
@@ -313,6 +311,17 @@ export default function ProductForm({ mode, productId, initial, availableSubcate
                 </option>
               ))}
             </select>
+          </Field>
+        </div>
+      </Section>
+
+      <Section title="Más datos">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Origen">
+            <input value={origin} onChange={(e) => setOrigin(e.target.value)} className={inputClass} />
+          </Field>
+          <Field label="Apto para">
+            <input value={suitableFor} onChange={(e) => setSuitableFor(e.target.value)} className={inputClass} />
           </Field>
           <Field label="Visible en la tienda">
             <select value={isActive ? "1" : "0"} onChange={(e) => setIsActive(e.target.value === "1")} className={inputClass}>

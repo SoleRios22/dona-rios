@@ -123,7 +123,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <span className="absolute left-5 top-5 z-10 rounded-full bg-avocado px-3.5 py-1.5 text-xs font-semibold text-cream">
               ⭐ Selección Doña Ríos
             </span>
-            <ProductVisual colorway={product.colorway} isBox={product.is_box} size={200} />
+            <ProductVisual colorway={product.colorway} isBox={product.is_box} imageUrl={product.image_url} size={200} />
           </div>
         </div>
 

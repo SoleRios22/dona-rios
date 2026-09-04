@@ -31,7 +31,7 @@ export async function getCart() {
     .from("cart_items")
     .select(
       `id, quantity, variant_id,
-       products(id, slug, name, price, unit, colorway, is_box),
+       products(id, slug, name, price, unit, colorway, is_box, image_url),
        product_variants(id, label, price_delta)`
     )
     .eq("cart_id", cartId);

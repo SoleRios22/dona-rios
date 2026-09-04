@@ -12,6 +12,7 @@ interface Props {
   productName: string;
   colorway: string;
   isBox: boolean;
+  imageUrl: string | null;
   variantLabel: string | null;
   unitPrice: number;
   quantity: number;
@@ -23,6 +24,7 @@ export default function CartItemRow({
   productName,
   colorway,
   isBox,
+  imageUrl,
   variantLabel,
   unitPrice,
   quantity,
@@ -51,7 +53,7 @@ export default function CartItemRow({
   return (
     <div className={`flex gap-4 rounded-2xl border border-line bg-white p-4 ${isPending ? "opacity-60" : ""}`}>
       <Link href={`/producto/${productSlug}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-xl">
-        <ProductVisual colorway={colorway} isBox={isBox} size={48} />
+        <ProductVisual colorway={colorway} isBox={isBox} imageUrl={imageUrl} size={48} />
       </Link>
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
         <div>

@@ -26,6 +26,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         origin: product.origin ?? "",
         suitableFor: product.suitable_for ?? "",
         colorway: product.colorway,
+        imageUrl: product.image_url,
         isBox: product.is_box,
         isActive: product.is_active,
         stock: product.stock,

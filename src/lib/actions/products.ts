@@ -15,6 +15,7 @@ export interface ProductFormInput {
   origin: string;
   suitableFor: string;
   colorway: string;
+  imageUrl: string | null;
   isBox: boolean;
   isActive: boolean;
   stock: number;
@@ -50,6 +51,7 @@ export async function getAllProductsForAdmin() {
 
   return data ?? [];
 }
+
 // Para el dashboard: productos activos con poco stock (umbral configurable).
 export async function getLowStockProducts(threshold = 5) {
   const { supabase, ok } = await requireAdmin();
@@ -72,7 +74,7 @@ export async function getProductForEdit(id: string) {
   const { data } = await supabase
     .from("products")
     .select(
-      `id, slug, name, short_description, description, price, old_price, unit, origin, suitable_for, colorway, is_box, is_active, stock,
+      `id, slug, name, short_description, description, price, old_price, unit, origin, suitable_for, colorway, image_url, is_box, is_active, stock,
        product_tags(tag), product_subcategories(subcategory_id), product_variants(id, label, price_delta, is_default), product_nutrition(label, value, sort_order)`
     )
     .eq("id", id)
@@ -98,6 +100,7 @@ export async function createProduct(input: ProductFormInput) {
       origin: input.origin,
       suitable_for: input.suitableFor,
       colorway: input.colorway,
+      image_url: input.imageUrl,
       is_box: input.isBox,
       is_active: input.isActive,
       stock: input.stock,
@@ -132,6 +135,7 @@ export async function updateProduct(id: string, input: ProductFormInput) {
       origin: input.origin,
       suitable_for: input.suitableFor,
       colorway: input.colorway,
+      image_url: input.imageUrl,
       is_box: input.isBox,
       is_active: input.isActive,
       stock: input.stock,

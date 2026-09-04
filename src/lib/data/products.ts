@@ -14,7 +14,7 @@ export async function getProducts(options?: {
   let query = supabase
     .from("products")
     .select(
-      `id, slug, name, short_description, description, price, old_price, unit, origin, suitable_for, colorway, is_box, stock,
+      `id, slug, name, short_description, description, price, old_price, unit, origin, suitable_for, colorway, is_box, stock, image_url,
        product_tags(tag),
        product_subcategories(subcategories(id, name, slug)),
        product_variants(id, label, price_delta, is_default),
@@ -48,6 +48,7 @@ export async function getProducts(options?: {
       colorway: p.colorway,
       is_box: p.is_box,
       stock: p.stock,
+      image_url: p.image_url,
       tags: (p.product_tags ?? []).map((t) => t.tag as CategoryTag),
       subcategories,
       variants: p.product_variants ?? [],
@@ -85,7 +86,7 @@ export async function getProductBySlug(slug: string) {
   const { data: product, error } = await supabase
     .from("products")
     .select(
-      `id, slug, name, short_description, description, price, old_price, unit, origin, suitable_for, colorway, is_box, stock,
+      `id, slug, name, short_description, description, price, old_price, unit, origin, suitable_for, colorway, is_box, stock, image_url,
        product_tags(tag),
        product_variants(id, label, price_delta, is_default),
        product_nutrition(label, value, sort_order)`
@@ -123,6 +124,7 @@ export async function getProductBySlug(slug: string) {
     colorway: product.colorway,
     is_box: product.is_box,
     stock: product.stock,
+    image_url: product.image_url,
     tags: (product.product_tags ?? []).map((t) => t.tag as CategoryTag),
     variants: product.product_variants ?? [],
     nutrition: (product.product_nutrition ?? []).sort((a, b) => a.sort_order - b.sort_order),

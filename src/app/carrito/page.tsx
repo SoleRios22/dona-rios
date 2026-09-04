@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { getCart } from "@/lib/actions/cart";
 import CartItemRow from "@/components/cart/CartItemRow";
+import Breadcrumb from "@/components/Breadcrumb";
 import { formatCurrency } from "@/lib/utils/currency";
-import Breadcrumb from "@/components/Breadcrumb"
 
 interface CartProductJoin {
   id: string;
@@ -12,6 +12,7 @@ interface CartProductJoin {
   unit: string | null;
   colorway: string;
   is_box: boolean;
+  image_url: string | null;
 }
 interface CartVariantJoin {
   id: string;
@@ -25,7 +26,6 @@ export default async function CartPage() {
   if (!cart.authenticated) {
     return (
       <div className="mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center px-6 text-center">
-        <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "Tu carrito" }]} />
         <h1 className="mb-2 text-2xl">Tu carrito</h1>
         <p className="mb-6 text-sm text-forest/60">Iniciá sesión para ver y guardar tu carrito.</p>
         <Link href="/login?next=/carrito" className="rounded-full bg-avocado px-6 py-3 font-semibold text-cream">
@@ -48,6 +48,7 @@ export default async function CartPage() {
 
   return (
     <div className="mx-auto max-w-[1180px] px-6 py-10 md:px-8">
+      <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "Tu carrito" }]} />
       <h1 className="mb-1 text-3xl">Tu carrito</h1>
       <p className="mb-8 text-sm text-forest/60">
         {items.length} producto{items.length !== 1 ? "s" : ""} seleccionado{items.length !== 1 ? "s" : ""}
@@ -72,6 +73,7 @@ export default async function CartPage() {
                   productName={product.name}
                   colorway={product.colorway}
                   isBox={product.is_box}
+                  imageUrl={product.image_url}
                   variantLabel={variant?.label ?? product.unit}
                   unitPrice={product.price + (variant?.price_delta ?? 0)}
                   quantity={item.quantity}

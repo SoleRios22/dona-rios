@@ -16,13 +16,20 @@ export default function ProductVisual({
   colorway = "clay",
   isBox = false,
   size = 100,
+  imageUrl,
 }: {
   colorway?: string;
   isBox?: boolean;
   size?: number;
+  imageUrl?: string | null;
 }) {
   const c = JAR_COLORS[colorway] ?? JAR_COLORS.clay;
   const bg = BG_TINTS[colorway] ?? BG_TINTS.clay;
+
+  if (imageUrl) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={imageUrl} alt="" className="h-full w-full rounded-2xl object-cover" />;
+  }
 
   return (
     <div

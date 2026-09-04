@@ -33,7 +33,7 @@ export default function ProductCard({
 
       <Link href={`/producto/${product.slug}`}>
         <div className="mb-4 h-[150px]">
-          <ProductVisual colorway={product.colorway} isBox={product.is_box} size={product.is_box ? 60 : 60} />
+          <ProductVisual colorway={product.colorway} isBox={product.is_box} imageUrl={product.image_url} size={product.is_box ? 60 : 60} />
         </div>
         <h3 className="mb-1 text-[16px] font-semibold">{product.name}</h3>
       </Link>
