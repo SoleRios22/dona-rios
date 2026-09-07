@@ -34,6 +34,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   { href: "/admin/subcategorias", label: "Subcategorías" },
   { href: "/admin/mensajes", label: "Mensajes" },
   { href: "/admin/productos/nuevo", label: "+ Nuevo producto" },
+  { href: "/admin/envios", label: "Envíos" },
+  { href: "/admin/puntos-retiro", label: "Puntos de retiro" },
 ];
 
   return (

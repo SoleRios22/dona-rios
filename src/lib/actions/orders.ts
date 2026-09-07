@@ -13,6 +13,7 @@ interface CheckoutInput {
   neighborhood?: string;
   pickupPoint?: string;
   shippingCost: number;
+    shippingDistanceKm?: number;
 }
 
 export async function confirmOrder(input: CheckoutInput) {
@@ -57,6 +58,7 @@ export async function confirmOrder(input: CheckoutInput) {
       shipping_cost: input.shippingCost,
       total,
       status: "pendiente",
+            shipping_distance_km: input.shippingDistanceKm ?? null,
     })
     .select("id")
     .single();
@@ -91,6 +93,7 @@ export async function confirmOrder(input: CheckoutInput) {
     "🥑 Pedido Doña Ríos",
     ...lines,
     `Total: $${total.toLocaleString("es-AR")}`,
+        ...(input.shippingDistanceKm ? [`Distancia estimada: ${input.shippingDistanceKm} km`] : []),
     `Entrega: ${input.fulfillment === "envio" ? `Envío a ${input.address ?? "domicilio"}` : `Retiro en ${input.pickupPoint ?? "punto a coordinar"}`}`,
     `Pago: ${paymentLabels[input.paymentMethod]}`,
     `N° de pedido: ${order.id.slice(0, 8)}`,

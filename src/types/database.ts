@@ -131,6 +131,7 @@ export interface Database {
           fulfillment: OrderFulfillment;
           payment_method: OrderPayment;
           total: number;
+          shipping_distance_km: number | null;
         };
         Update: Partial<Database["public"]["Tables"]["orders"]["Row"]>;
       };
@@ -185,4 +186,26 @@ export interface ProductWithRelations {
   nutrition: { label: string; value: string }[];
   rating: number;
   reviewCount: number;
+}
+export interface ShippingSettings {
+  id: string;
+  origin_address: string;
+  origin_lat: number;
+  origin_lng: number;
+  fuel_price: number;
+  fuel_consumption: number;
+  profit_type: "percentage" | "fixed";
+  profit_value: number;
+  round_trip: boolean;
+  route_factor: number;
+  min_shipping_cost: number;
+  free_shipping_threshold: number | null;
+  updated_at: string;
+}
+export interface PickupPoint {
+  id: string;
+  name: string;
+  address: string | null;
+  is_active: boolean;
+  sort_order: number;
 }

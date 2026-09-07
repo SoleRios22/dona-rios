@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCart } from "@/lib/actions/cart";
+import { getPickupPoints } from "@/lib/actions/pickup-points";
 import CheckoutForm from "@/components/checkout/CheckoutForm";
-import Breadcrumb from "@/components/Breadcrumb"
+import Breadcrumb from "@/components/Breadcrumb";
 
 interface CartProductJoin {
   name: string;
@@ -17,6 +18,8 @@ export default async function CheckoutPage() {
 
   if (!cart.authenticated) redirect("/login?next=/checkout");
   if (cart.items.length === 0) redirect("/carrito");
+
+  const pickupPoints = await getPickupPoints(true);
 
   const lines = cart.items
     .map((item) => {
@@ -39,7 +42,7 @@ export default async function CheckoutPage() {
       <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "Carrito", href: "/carrito" }, { label: "Finalizar pedido" }]} />
       <h1 className="mb-1 text-3xl">Finalizar pedido</h1>
       <p className="mb-8 text-sm text-forest/60">Últimos datos y coordinamos el resto por WhatsApp</p>
-      <CheckoutForm lines={lines} subtotal={subtotal} />
+      <CheckoutForm lines={lines} subtotal={subtotal} pickupPoints={pickupPoints} />
     </div>
   );
 }
