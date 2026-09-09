@@ -212,10 +212,7 @@ export default function CheckoutForm({
                     <p className="font-semibold text-avocado-dark">🎉 ¡Envío gratis por tu compra!</p>
                   ) : (
                     <div>
-                      <div className="flex justify-between">
-                        <span className="text-forest/60">Distancia estimada</span>
-                        <span className="font-semibold">{shippingDistanceKm} km</span>
-                      </div>
+                     
                       <div className="flex justify-between">
                         <span className="text-forest/60">Costo de envío</span>
                         <span className="font-display font-semibold">{formatCurrency(shippingCost ?? 0)}</span>
