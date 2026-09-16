@@ -22,9 +22,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!product) return {};
 
   const title = product.name;
-  const description =
-    product.short_description ||
-    `${product.name} — ${CATEGORY_LABELS[product.tags[0]]?.label ?? "Selección Doña Ríos"}. Envío o retiro en Río Cuarto.`;
+  const categoryLabel = CATEGORY_LABELS[product.tags[0]]?.label ?? "Selección Doña Ríos";
+  const description = product.short_description
+    ? `${product.short_description} ${categoryLabel} · Envío o retiro en Río Cuarto, Córdoba.`
+    : `${product.name} — ${categoryLabel}. Envío o retiro en Río Cuarto, Córdoba.`;
 
   return {
     title,
@@ -184,6 +185,26 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </dl>
         </div>
       </section>
+
+      {product.is_box && product.boxContents.length > 0 && (
+        <section className="mx-auto max-w-[1180px] px-6 pt-4 md:px-8">
+          <div className="rounded-[20px] border border-line bg-cream-2 p-7">
+            <h2 className="mb-4 text-lg">⭐ Este combo incluye</h2>
+            <div className="grid gap-2.5 sm:grid-cols-2">
+              {product.boxContents.map((item) => (
+                <Link
+                  key={item.productId}
+                  href={item.slug ? `/producto/${item.slug}` : "#"}
+                  className="flex items-center justify-between rounded-xl bg-white px-4 py-3 text-sm hover:bg-cream"
+                >
+                  <span className="font-medium">{item.name}</span>
+                  <span className="text-forest/50">× {item.quantity}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="mx-auto max-w-[1180px] px-6 py-12 md:px-8">
         <ProductTabs description={product.description ?? ""} nutrition={product.nutrition} />

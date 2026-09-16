@@ -1,7 +1,8 @@
 import ProductForm from "@/components/admin/ProductForm";
 import { getSubcategories } from "@/lib/actions/subcategories";
+import { getProductsForBoxPicker } from "@/lib/actions/products";
 
 export default async function NewProductPage() {
-  const subcategories = await getSubcategories();
-  return <ProductForm mode="create" availableSubcategories={subcategories} />;
+  const [subcategories, availableProducts] = await Promise.all([getSubcategories(), getProductsForBoxPicker()]);
+  return <ProductForm mode="create" availableSubcategories={subcategories} availableProducts={availableProducts} />;
 }

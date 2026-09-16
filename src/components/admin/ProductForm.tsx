@@ -6,12 +6,14 @@ import { createProduct, updateProduct, type ProductFormInput } from "@/lib/actio
 import { CATEGORY_LABELS, type CategoryTag, type Subcategory } from "@/types/database";
 import { slugify } from "@/lib/utils/slugify";
 import ImageUploader from "@/components/admin/ImageUploader";
+import BoxItemPicker, { type BoxItemState } from "@/components/admin/BoxItemPicker";
 
 interface Props {
   mode: "create" | "edit";
   productId?: string;
   initial?: Partial<ProductFormInput>;
   availableSubcategories: Subcategory[];
+  availableProducts: { id: string; name: string; price: number }[];
 }
 
 const ALL_TAGS: CategoryTag[] = ["keto", "low-carb", "sin-gluten", "sin-azucar", "seleccion"];
@@ -22,7 +24,7 @@ const COLORWAYS = [
   { value: "cream", label: "Crema" },
 ];
 
-export default function ProductForm({ mode, productId, initial, availableSubcategories }: Props) {
+export default function ProductForm({ mode, productId, initial, availableSubcategories, availableProducts }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +48,9 @@ export default function ProductForm({ mode, productId, initial, availableSubcate
   const [subcategoryIds, setSubcategoryIds] = useState<string[]>(initial?.subcategoryIds ?? []);
   const [variants, setVariants] = useState(initial?.variants ?? []);
   const [nutrition, setNutrition] = useState(initial?.nutrition ?? []);
+  const [boxItems, setBoxItems] = useState<BoxItemState[]>(
+    (initial?.boxItems ?? []).map((b) => ({ productId: b.productId, quantity: b.quantity, name: b.name ?? "" }))
+  );
 
   function toggleSubcategory(id: string) {
     setSubcategoryIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -108,6 +113,7 @@ export default function ProductForm({ mode, productId, initial, availableSubcate
       subcategoryIds,
       variants: variants.filter((v) => v.label.trim()),
       nutrition: nutrition.filter((n) => n.label.trim()),
+      boxItems: boxItems.map(({ productId, quantity }) => ({ productId, quantity })),
     };
 
     startTransition(async () => {
@@ -193,6 +199,15 @@ export default function ProductForm({ mode, productId, initial, availableSubcate
           Es un box armado (⭐)
         </label>
       </Section>
+
+      {isBox && (
+        <Section title="Contenido del combo">
+          <p className="mb-4 text-sm text-forest/60">
+            Buscá y agregá los productos que ya tenés cargados. Podés ajustar la cantidad de cada uno.
+          </p>
+          <BoxItemPicker availableProducts={availableProducts} value={boxItems} onChange={setBoxItems} />
+        </Section>
+      )}
 
       <Section title="Subcategorías (opcional)">
         {tags.length === 0 ? (

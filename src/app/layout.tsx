@@ -29,7 +29,11 @@ export const metadata: Metadata = {
     "productos sin gluten Río Cuarto",
     "almacén saludable Río Cuarto",
     "dietética online Río Cuarto",
-    "comida sin azúcar Córdoba",
+    "comida sin azúcar Río Cuarto",
+    "tienda saludable Río Cuarto",
+"envío Río Cuarto",
+"comprar keto online Argentina",
+"productos low carb Argentina",
   ],
   authors: [{ name: "Doña Ríos" }],
   alternates: { canonical: "/" },
@@ -48,6 +52,12 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
   },
   robots: { index: true, follow: true },
+  other: {
+  "geo.region": "AR-X",
+  "geo.placename": "Río Cuarto",
+  "geo.position": `${BUSINESS.geo.latitude};${BUSINESS.geo.longitude}`,
+  ICBM: `${BUSINESS.geo.latitude}, ${BUSINESS.geo.longitude}`,
+},
 };
 
 // Datos estructurados de negocio local: ayudan tanto al SEO tradicional (Google)
@@ -55,11 +65,12 @@ export const metadata: Metadata = {
 // y cómo contactarla, sin inventar un domicilio físico que no existe (es 100% online).
 const localBusinessJsonLd = {
   "@context": "https://schema.org",
-  "@type": "LocalBusiness",
+  "@type": ["GroceryStore", "LocalBusiness"],
   name: BUSINESS.name,
   description: SITE_DESCRIPTION,
   url: SITE_URL,
   telephone: `+${BUSINESS.whatsapp}`,
+  image: `${SITE_URL}/opengraph-image.png`,
   areaServed: {
     "@type": "City",
     name: BUSINESS.city,
@@ -71,8 +82,15 @@ const localBusinessJsonLd = {
     addressRegion: BUSINESS.region,
     addressCountry: BUSINESS.country,
   },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: BUSINESS.geo.latitude,
+    longitude: BUSINESS.geo.longitude,
+  },
+  hasMap: `https://www.google.com/maps/search/?api=1&query=${BUSINESS.geo.latitude},${BUSINESS.geo.longitude}`,
   sameAs: [`https://instagram.com/${BUSINESS.instagram}`],
   priceRange: "$$",
+  paymentAccepted: "Efectivo, Transferencia bancaria, Mercado Pago, Tarjeta de débito/crédito",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

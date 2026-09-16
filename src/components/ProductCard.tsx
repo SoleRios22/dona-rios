@@ -4,16 +4,24 @@ import Stars from "@/components/Stars";
 import AddToCartButton from "@/components/AddToCartButton";
 import FavoriteButton from "@/components/FavoriteButton";
 import { formatCurrency } from "@/lib/utils/currency";
-import { CATEGORY_LABELS, type ProductWithRelations } from "@/types/database";
+import { CATEGORY_LABELS, type CategoryTag, type ProductWithRelations } from "@/types/database";
 
 export default function ProductCard({
   product,
   isFavorite = false,
+  activeTag,
 }: {
   product: ProductWithRelations;
   isFavorite?: boolean;
+  /** Si estás en una página de categoría (o querés destacar un tag puntual), pasalo acá
+   * para que el cartel muestre esa categoría en vez de la primera que tenga el producto. */
+  activeTag?: CategoryTag;
 }) {
-  const primaryTag = product.is_box ? null : product.tags[0];
+  const primaryTag = product.is_box
+    ? null
+    : activeTag && product.tags.includes(activeTag)
+      ? activeTag
+      : product.tags[0];
 
   return (
     <div className="relative rounded-[20px] border border-line bg-white p-5 transition hover:-translate-y-1.5 hover:shadow-[0_16px_30px_rgba(43,54,32,0.10)]">

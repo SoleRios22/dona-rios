@@ -11,4 +11,5 @@ export const BUSINESS = {
   city: "Río Cuarto",
   region: "Córdoba",
   country: "AR",
+   geo: { latitude: -33.1232, longitude: -64.3492 },
 };

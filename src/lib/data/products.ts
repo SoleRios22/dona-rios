@@ -97,6 +97,19 @@ export async function getProductBySlug(slug: string) {
 
   if (error || !product) return null;
 
+  let boxContents: { productId: string; name: string; slug: string; quantity: number }[] = [];
+  if (product.is_box) {
+    const { data: items } = await supabase
+      .from("box_items")
+      .select("quantity, included_product_id, products!box_items_included_fkey(name, slug)")
+      .eq("box_product_id", product.id);
+
+    boxContents = (items ?? []).map((item) => {
+      const p = item.products as unknown as { name: string; slug: string } | null;
+      return { productId: item.included_product_id, name: p?.name ?? "Producto", slug: p?.slug ?? "", quantity: item.quantity };
+    });
+  }
+
   const { data: reviews } = await supabase
     .from("reviews")
     .select("id, user_id, rating, comment, created_at, profiles(full_name)")
@@ -128,6 +141,7 @@ export async function getProductBySlug(slug: string) {
     tags: (product.product_tags ?? []).map((t) => t.tag as CategoryTag),
     variants: product.product_variants ?? [],
     nutrition: (product.product_nutrition ?? []).sort((a, b) => a.sort_order - b.sort_order),
+    boxContents,
     rating: Number(avg.toFixed(1)),
     reviewCount: ratings.length,
     ratingBreakdown: breakdown,

@@ -23,6 +23,7 @@ export interface ProductFormInput {
   subcategoryIds: string[];
   variants: { label: string; priceDelta: number; isDefault: boolean }[];
   nutrition: { label: string; value: string }[];
+  boxItems: { productId: string; quantity: number; name?: string }[];
 }
 
 // Chequeo de admin del lado del servidor, además de la política RLS
@@ -48,6 +49,21 @@ export async function getAllProductsForAdmin() {
     .from("products")
     .select("id, slug, name, price, stock, is_active, is_box, product_tags(tag)")
     .order("created_at", { ascending: false });
+
+  return data ?? [];
+}
+
+// Para el buscador de "armar combo": productos individuales activos (nunca otros combos).
+export async function getProductsForBoxPicker() {
+  const { supabase, ok } = await requireAdmin();
+  if (!ok) return [];
+
+  const { data } = await supabase
+    .from("products")
+    .select("id, name, price")
+    .eq("is_active", true)
+    .eq("is_box", false)
+    .order("name");
 
   return data ?? [];
 }
@@ -80,7 +96,15 @@ export async function getProductForEdit(id: string) {
     .eq("id", id)
     .single();
 
-  return data;
+  if (!data) return null;
+
+  // Consulta separada (más simple que desambiguar el doble FK de box_items -> products en un solo embed)
+  const { data: boxItems } = await supabase
+    .from("box_items")
+    .select("included_product_id, quantity, products!box_items_included_fkey(name)")
+    .eq("box_product_id", id);
+
+  return { ...data, box_items: boxItems ?? [] };
 }
 
 export async function createProduct(input: ProductFormInput) {
@@ -115,6 +139,7 @@ export async function createProduct(input: ProductFormInput) {
   await saveRelations(supabase, product.id, input);
   revalidatePath("/admin");
   revalidatePath("/admin/productos");
+  revalidatePath("/");
   return { error: null, id: product.id };
 }
 
@@ -149,10 +174,12 @@ export async function updateProduct(id: string, input: ProductFormInput) {
   await supabase.from("product_subcategories").delete().eq("product_id", id);
   await supabase.from("product_variants").delete().eq("product_id", id);
   await supabase.from("product_nutrition").delete().eq("product_id", id);
+  await supabase.from("box_items").delete().eq("box_product_id", id);
   await saveRelations(supabase, id, input);
 
   revalidatePath("/admin");
   revalidatePath("/admin/productos");
+  revalidatePath("/");
   revalidatePath(`/producto/${input.slug}`);
   return { error: null, id };
 }
@@ -187,6 +214,15 @@ async function saveRelations(
         label: n.label,
         value: n.value,
         sort_order: i,
+      }))
+    );
+  }
+  if (input.isBox && input.boxItems.length > 0) {
+    await supabase.from("box_items").insert(
+      input.boxItems.map((item) => ({
+        box_product_id: productId,
+        included_product_id: item.productId,
+        quantity: item.quantity,
       }))
     );
   }

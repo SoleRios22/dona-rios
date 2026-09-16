@@ -31,58 +31,68 @@ export default function TermsPage() {
 
       <Section title="1. Quiénes somos">
         <p>
-          {BUSINESS.name} es una tienda online que opera en {BUSINESS.city}, {BUSINESS.region}, Argentina. No
-          contamos con local físico: los pedidos se coordinan por envío a domicilio o retiro en un punto de
-          encuentro. Al usar este sitio o realizar un pedido, aceptás estos términos.
+          {BUSINESS.name} es una tienda online que opera en {BUSINESS.city}, {BUSINESS.region}, Argentina.</p>
+          <p>No contamos con local físico abierto al público. Los pedidos se coordinan mediante envío a domicilio o retiro en un punto de encuentro, según las opciones disponibles al momento de realizar la compra.
         </p>
+        <p>Al utilizar este sitio o realizar un pedido, aceptás estos términos y condiciones.</p>
       </Section>
 
       <Section title="2. Qué es Doña Ríos">
         <p>
-          Somos una tienda curadora: seleccionamos y revendemos productos de terceros elaboradores que cumplen
-          los criterios que usamos para armar el catálogo (composición nutricional, ausencia de azúcares
-          agregadas, aptitud sin gluten, entre otros). No fabricamos los productos que vendemos.
+          Somos una tienda especializada en alimentación saludable. Seleccionamos y revendemos productos elaborados por terceros que cumplen con los criterios definidos para formar parte de nuestro catálogo, entre ellos composición nutricional, ingredientes, ausencia de azúcares agregados, aptitud sin gluten y otros criterios según cada producto.
         </p>
+        <p><strong>No fabricamos los productos que vendemos ni contamos con una marca propia.</strong></p>
       </Section>
 
       <Section title="3. Cuentas de usuario">
         <p>
-          Para comprar, guardar tu carrito, ver tu historial de pedidos o dejar reseñas, necesitás iniciar
-          sesión con Google o Facebook. Sos responsable de la actividad que ocurra en tu cuenta. Si detectás un
-          uso no autorizado, avisanos por WhatsApp o por el formulario de contacto.
+          Para determinadas funciones del sitio, como realizar compras, consultar el historial de pedidos o dejar reseñas, puede ser necesario iniciar sesión mediante los medios de autenticación disponibles.
         </p>
+        <p>Sos responsable de mantener la seguridad de tu cuenta y de la actividad realizada desde ella. Si detectás un uso no autorizado, podés comunicarte con nosotros por WhatsApp o mediante el formulario de contacto.</p>
       </Section>
 
       <Section title="4. Precios y disponibilidad">
         <p>
-          Los precios están expresados en pesos argentinos e incluyen los impuestos correspondientes. Pueden
-          modificarse sin previo aviso, así como la disponibilidad de stock. El precio válido es el que figura
-          en el momento de confirmar tu pedido.
+          Los precios se expresan en<strong> pesos argentinos </strong>y corresponden al precio final informado en el sitio.
+
+Los precios y la disponibilidad de los productos pueden modificarse. El precio aplicable al pedido será el informado al momento de confirmar la compra.
+
+En caso de que un producto no se encuentre disponible, nos comunicaremos con vos para informarte las alternativas posibles.
         </p>
       </Section>
 
       <Section title="5. Cómo funciona la compra">
         <p>
-          Agregás productos al carrito y completás el checkout eligiendo entrega y forma de pago preferida. El
-          sitio no procesa pagos online: al confirmar, se genera un mensaje con el resumen de tu pedido que se
-          envía por WhatsApp, y ahí coordinamos con vos los detalles finales y el pago. El pedido queda
-          confirmado en firme una vez que lo validamos por ese medio.
+          Agregás los productos al carrito y completás el proceso de compra, seleccionando la modalidad de entrega y los datos solicitados.
+
+El sitio <strong>no procesa pagos online directamente</strong>. Al finalizar el pedido, se genera un mensaje con el resumen de la compra que se envía por WhatsApp. Por ese medio coordinamos los detalles finales, disponibilidad y forma de pago.
+
+El pedido se considera confirmado una vez que <strong>Doña Ríos valida el pedido y acuerda con el cliente los detalles de la operación</strong>.
         </p>
       </Section>
 
       <Section title="6. Envío y retiro">
         <p>
-          Hacemos envíos a domicilio dentro de {BUSINESS.city} (con un costo adicional que se muestra en el
-          checkout) o coordinamos el retiro en un punto de encuentro sin costo. No realizamos envíos fuera de
-          esta zona por el momento.
+          Realizamos envíos a domicilio dentro de  {BUSINESS.city}, con el costo correspondiente informado durante el proceso de compra.
+
+También ofrecemos la posibilidad de retirar el pedido en un <strong>punto de encuentro previamente acordado</strong>.
+
+Por el momento, no realizamos envíos fuera de  {BUSINESS.city}.
+        
         </p>
       </Section>
 
       <Section title="7. Medios de pago">
         <p>
-          Aceptamos efectivo, transferencia bancaria, Mercado Pago (QR) y tarjeta de débito/crédito, según
-          disponibilidad al momento de coordinar la entrega. El medio de pago se confirma por WhatsApp junto con
-          el resto del pedido.
+         Los medios de pago disponibles pueden incluir:
+
+Efectivo,
+Transferencia bancaria,
+Mercado Pago,
+QR,
+Tarjetas de débito y crédito.
+
+La disponibilidad de cada medio y las condiciones aplicables se informarán al momento de coordinar el pedido.
         </p>
       </Section>
 
@@ -104,31 +114,35 @@ export default function TermsPage() {
 
       <Section title="10. Información nutricional y de salud">
         <p>
-          La información nutricional y las guías que publicamos son de carácter general e informativo. No
-          somos nutricionistas ni médicos, y nada de lo publicado en este sitio reemplaza una consulta
-          profesional. Consultá con un profesional de la salud antes de modificar tu alimentación por
-          condiciones médicas específicas.
+          La información nutricional, descripciones, recomendaciones y contenidos publicados en el sitio tienen<strong> carácter general e informativo</strong>.
+
+Doña Ríos no brinda asesoramiento médico ni nutricional profesional. La información publicada no reemplaza la consulta con un médico, nutricionista u otro profesional de la salud.
+
+Si tenés una condición médica específica, alergia, intolerancia o requerimiento alimentario particular, recomendamos consultar con un profesional antes de incorporar un producto a tu alimentación.
         </p>
       </Section>
 
       <Section title="11. Propiedad intelectual">
         <p>
-          El contenido de este sitio (textos, diseño, logo, ilustraciones) pertenece a {BUSINESS.name} o se usa
-          con la debida autorización, y no puede reproducirse sin permiso.
+          Los textos, fotografías, diseño, identidad visual, logotipo, ilustraciones y demás contenidos del sitio pertenecen a Doña Ríos o se utilizan con autorización de sus respectivos titulares.
+
+No está permitida su reproducción, modificación o utilización comercial sin autorización previa.
         </p>
       </Section>
 
       <Section title="12. Modificaciones">
         <p>
-          Podemos actualizar estos términos ocasionalmente. Los cambios importantes se van a reflejar en esta
-          misma página con la fecha de actualización.
+         Doña Ríos podrá actualizar estos términos y condiciones cuando resulte necesario.
+
+Las modificaciones serán publicadas en esta misma página indicando la fecha de actualización.
         </p>
       </Section>
 
       <Section title="13. Ley aplicable">
         <p>
-          Estos términos se rigen por las leyes de la República Argentina. Ante cualquier controversia, las
-          partes se someten a los tribunales ordinarios de {BUSINESS.city}, {BUSINESS.region}.
+          Estos términos se rigen por las leyes de la República Argentina y por las normas de protección de los consumidores que resulten aplicables.
+
+Nada de lo establecido en estos términos limita los derechos que la legislación reconoce a los consumidores.
         </p>
       </Section>
 

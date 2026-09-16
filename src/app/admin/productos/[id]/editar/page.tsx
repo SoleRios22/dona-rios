@@ -1,12 +1,16 @@
 import { notFound } from "next/navigation";
-import { getProductForEdit } from "@/lib/actions/products";
+import { getProductForEdit, getProductsForBoxPicker } from "@/lib/actions/products";
 import { getSubcategories } from "@/lib/actions/subcategories";
 import ProductForm from "@/components/admin/ProductForm";
 import type { CategoryTag } from "@/types/database";
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [product, availableSubcategories] = await Promise.all([getProductForEdit(id), getSubcategories()]);
+  const [product, availableSubcategories, availableProducts] = await Promise.all([
+    getProductForEdit(id),
+    getSubcategories(),
+    getProductsForBoxPicker(),
+  ]);
 
   if (!product) notFound();
 
@@ -15,6 +19,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
       mode="edit"
       productId={product.id}
       availableSubcategories={availableSubcategories}
+      availableProducts={availableProducts.filter((p) => p.id !== product.id)}
       initial={{
         name: product.name,
         slug: product.slug,
@@ -38,6 +43,11 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         nutrition: (product.product_nutrition ?? [])
           .sort((a, b) => a.sort_order - b.sort_order)
           .map((n) => ({ label: n.label, value: n.value })),
+        boxItems: (product.box_items ?? []).map((b) => ({
+          productId: b.included_product_id,
+          quantity: b.quantity,
+          name: (b.products as unknown as { name: string } | null)?.name ?? "Producto",
+        })),
       }}
     />
   );

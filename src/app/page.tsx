@@ -9,7 +9,7 @@ const CATEGORY_STRIP: CategoryTag[] = ["keto", "low-carb", "sin-gluten", "sin-az
 
 export default async function HomePage() {
   const [allProducts, favoriteIds] = await Promise.all([getProducts(), getFavoriteProductIds()]);
-  const featured = allProducts.filter((p) => !p.is_box).slice(0, 4);
+ const featured = allProducts.filter((p) => !p.is_box && p.tags.includes("seleccion")).slice(0, 4);
   const boxes = allProducts.filter((p) => p.is_box).slice(0, 4);
 
   return (
@@ -116,7 +116,7 @@ export default async function HomePage() {
             </p>
             <h2 className="text-[30px]">Lo que nosotros elegiríamos</h2>
           </div>
-          <Link href="/categoria/seleccion" className="border-b-2 border-honey pb-0.5 text-sm font-semibold">
+          <Link href="/categoria/todos" className="border-b-2 border-honey pb-0.5 text-sm font-semibold">
             Ver todo el catálogo →
           </Link>
         </div>

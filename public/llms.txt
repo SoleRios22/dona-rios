@@ -6,17 +6,21 @@
 > Operan 100% online, sin local físico: envío a domicilio en Río Cuarto o retiro coordinado.
 > Los pedidos se confirman por WhatsApp.
 
+Sitio: https://www.xn--doarios-5za.com.ar (doñarios.com.ar)
+Zona de cobertura: Río Cuarto, Córdoba, Argentina (lat -33.1232, long -64.3492 aprox.)
+
 ## Páginas principales
 
-- [Inicio](/): selección destacada y boxes armados
-- [Keto](/categoria/keto), [Low carb](/categoria/low-carb), [Sin gluten](/categoria/sin-gluten),
-  [Sin azúcar](/categoria/sin-azucar), [Selección Doña Ríos](/categoria/seleccion): catálogo por categoría
-- [Guías](/guias): explicaciones de conceptos de nutrición (keto vs. low carb, azúcar agregada,
-  grasas, gluten, índice glucémico) usados como criterio de selección
-- [Contacto](/contacto): formulario para consultas que no son pedidos
+- Inicio: https://www.xn--doarios-5za.com.ar/ — selección destacada y combos armados
+- Categorías: /categoria/keto, /categoria/low-carb, /categoria/sin-gluten,
+  /categoria/sin-azucar, /categoria/seleccion
+- Guías: /guias — conceptos de nutrición (keto vs. low carb, azúcar agregada, grasas,
+  gluten, índice glucémico) usados como criterio de selección
+- Sobre nosotros: /sobre-nosotros — filosofía de la marca e historia
+- Contacto: /contacto — formulario para consultas que no son pedidos
 
 ## Contacto
 
 - WhatsApp: +54 9 358 431-5332
 - Instagram: @donarios_almacensaludable
-- Zona de cobertura: Río Cuarto, Córdoba, Argentina
+- Ciudad: Río Cuarto, Córdoba, Argentina
