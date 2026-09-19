@@ -20,10 +20,14 @@ export default function SearchInput() {
   return (
     <form onSubmit={handleSubmit} className="relative flex-1 max-w-sm">
       <input
+        name="search"
+        aria-label="Buscar productos"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Buscar por nombre o subcategoría..."
         className="w-full rounded-full border border-line bg-white py-2.5 pl-10 pr-4 text-sm"
+        type="search"
+        
       />
       <svg
         width="16"
@@ -33,6 +37,7 @@ export default function SearchInput() {
         stroke="#8b9480"
         strokeWidth="1.8"
         className="absolute left-3.5 top-1/2 -translate-y-1/2"
+        aria-hidden="true"
       >
         <circle cx="11" cy="11" r="7" />
         <path d="M21 21l-4.3-4.3" />

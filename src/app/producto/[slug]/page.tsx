@@ -28,11 +28,32 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     : `${product.name} — ${categoryLabel}. Envío o retiro en Río Cuarto, Córdoba.`;
 
   return {
-    title,
+  title,
+  description,
+  alternates: {
+    canonical: `/producto/${product.slug}`,
+  },
+  openGraph: {
+    title: `${title} | Doña Ríos`,
     description,
-    alternates: { canonical: `/producto/${product.slug}` },
-    openGraph: { title: `${title} | Doña Ríos`, description, url: `${SITE_URL}/producto/${product.slug}` },
-  };
+    url: `${SITE_URL}/producto/${product.slug}`,
+    type: "website",
+    images: product.image_url
+      ? [
+          {
+            url: product.image_url,
+            alt: product.name,
+          },
+        ]
+      : undefined,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${title} | Doña Ríos`,
+    description,
+    images: product.image_url ? [product.image_url] : undefined,
+  },
+};
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -66,6 +87,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
     },
   };
+  if (product.image_url) {
+  productJsonLd.image = [product.image_url];
+}
   if (product.reviewCount > 0) {
     productJsonLd.aggregateRating = {
       "@type": "AggregateRating",
@@ -124,7 +148,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <span className="absolute left-5 top-5 z-10 rounded-full bg-avocado px-3.5 py-1.5 text-xs font-semibold text-cream">
               ⭐ Selección Doña Ríos
             </span>
-            <ProductVisual colorway={product.colorway} isBox={product.is_box} imageUrl={product.image_url} size={200} />
+            <ProductVisual
+  colorway={product.colorway}
+  isBox={product.is_box}
+  imageUrl={product.image_url}
+  size={200}
+  alt={product.name}
+  imageSizes="(max-width: 768px) calc(100vw - 48px), 560px"
+/>
           </div>
         </div>
 

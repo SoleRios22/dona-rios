@@ -70,23 +70,48 @@ export default function ReviewForm({
       <p className="mb-6 text-sm text-forest/60">Si ya lo probaste, contanos qué te pareció.</p>
 
       <span className="mb-2.5 block text-xs font-bold uppercase tracking-wide text-forest">Tu puntaje</span>
-      <div className="mb-5 flex gap-1.5">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button key={n} type="button" onClick={() => setRating(n)}>
-            <svg width="30" height="30" viewBox="0 0 20 20" fill={n <= rating ? "#C8973C" : "none"} stroke={n <= rating ? "#A87A28" : "#C4B48A"} strokeWidth="1.5">
-              <path d="M10 1l2.6 5.8 6.3.6-4.8 4.2 1.4 6.3L10 14.9 4.5 17.9l1.4-6.3L1.1 7.4l6.3-.6z" />
-            </svg>
-          </button>
-        ))}
-      </div>
+      <div
+  className="mb-5 flex gap-1.5"
+  role="group"
+  aria-label="Puntaje de la valoración"
+>
+  {[1, 2, 3, 4, 5].map((n) => (
+    <button
+      key={n}
+      type="button"
+      onClick={() => setRating(n)}
+      aria-label={`${n} ${n === 1 ? "estrella" : "estrellas"}`}
+      aria-pressed={rating === n}
+    >
+      <svg
+        aria-hidden="true"
+        width="30"
+        height="30"
+        viewBox="0 0 20 20"
+        fill={n <= rating ? "#C8973C" : "none"}
+        stroke={n <= rating ? "#A87A28" : "#C4B48A"}
+        strokeWidth="1.5"
+      >
+        <path d="M10 1l2.6 5.8 6.3.6-4.8 4.2 1.4 6.3L10 14.9 4.5 17.9l1.4-6.3L1.1 7.4l6.3-.6z" />
+      </svg>
+    </button>
+  ))}
+</div>
 
       {error && <p className="mb-4 rounded-lg bg-clay/10 px-3 py-2 text-xs text-clay">{error}</p>}
       {success && <p className="mb-4 rounded-lg bg-avocado px-3 py-2 text-xs font-semibold text-cream">✓ ¡Gracias! Tu valoración se publicó.</p>}
 
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-forest">Tu comentario</label>
+          <label
+  htmlFor="review-comment"
+  className="mb-2 block text-xs font-bold uppercase tracking-wide text-forest"
+>
+  Tu comentario
+</label>
           <textarea
+          id="review-comment"
+name="comment"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             placeholder="Contanos tu experiencia con el producto..."

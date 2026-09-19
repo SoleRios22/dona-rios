@@ -60,7 +60,14 @@ export default function ImageUploader({
       <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-forest/70">Imagen del producto</span>
       <div className="flex items-center gap-4">
         <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-line bg-cream-2">
-          <ProductVisual colorway={colorway} isBox={isBox} imageUrl={value} size={44} />
+         <ProductVisual
+  colorway={colorway}
+  isBox={isBox}
+  imageUrl={value}
+  size={44}
+  alt="Vista previa de la imagen del producto"
+  imageSizes="96px"
+/>
         </div>
         <div className="flex flex-col gap-2">
           <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />

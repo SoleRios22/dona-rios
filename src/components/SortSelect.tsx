@@ -17,6 +17,7 @@ export default function SortSelect() {
 
   return (
     <select
+    aria-label="Ordenar productos"
       value={current}
       onChange={(e) => {
         const params = new URLSearchParams(searchParams.toString());

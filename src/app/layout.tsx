@@ -1,15 +1,14 @@
 import type { Metadata } from "next";
-import "@fontsource/fraunces/400.css";
-import "@fontsource/fraunces/500.css";
-import "@fontsource/fraunces/600.css";
-import "@fontsource/fraunces/500-italic.css";
-import "@fontsource/fraunces/600-italic.css";
-import "@fontsource/work-sans/400.css";
-import "@fontsource/work-sans/500.css";
-import "@fontsource/work-sans/600.css";
-import "@fontsource/work-sans/700.css";
-import "@fontsource/caveat/600.css";
-import "@fontsource/caveat/700.css";
+import "@fontsource/fraunces/latin-400.css";
+import "@fontsource/fraunces/latin-600.css";
+import "@fontsource/fraunces/latin-600-italic.css";
+
+import "@fontsource/work-sans/latin-400.css";
+import "@fontsource/work-sans/latin-500.css";
+import "@fontsource/work-sans/latin-600.css";
+import "@fontsource/work-sans/latin-700.css";
+
+import "@fontsource/caveat/latin-600.css";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";

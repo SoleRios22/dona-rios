@@ -13,7 +13,16 @@ import { SITE_URL } from "@/lib/constants";
 import { CATEGORY_LABELS, type CategoryTag } from "@/types/database";
 
 // 1. Incluimos 'todos' dentro de los tags válidos
-const VALID_TAGS = ["todos", ...Object.keys(CATEGORY_LABELS)] as (CategoryTag | "todos")[];
+type ValidTag = CategoryTag | "todos";
+
+const VALID_TAGS: ValidTag[] = [
+  "todos",
+  ...(Object.keys(CATEGORY_LABELS) as CategoryTag[]),
+];
+
+function isValidTag(tag: string): tag is ValidTag {
+  return VALID_TAGS.includes(tag as ValidTag);
+}
 
 const CATEGORY_INTROS: Record<CategoryTag | "todos", string> = {
   todos: "Explorá la lista completa de nuestros productos seleccionados.",
@@ -26,12 +35,16 @@ const CATEGORY_INTROS: Record<CategoryTag | "todos", string> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ tag: string }> }): Promise<Metadata> {
   const { tag } = await params;
-  if (!VALID_TAGS.includes(tag as any)) return {};
+ if (!isValidTag(tag)) return {};
 
   const isAll = tag === "todos";
-  const label = isAll ? "Todos los productos" : CATEGORY_LABELS[tag as CategoryTag]?.label;
+const label = isAll
+  ? "Todos los productos"
+  : CATEGORY_LABELS[tag].label;
+
+const description = `${CATEGORY_INTROS[tag]} Envío o retiro en Río Cuarto, Córdoba.`; 
   const title = `${label} en Río Cuarto`;
-  const description = `${CATEGORY_INTROS[tag as CategoryTag | "todos"]} Envío o retiro en Río Cuarto, Córdoba.`;
+ 
 
   return {
     title,
@@ -51,7 +64,7 @@ export default async function CategoryPage({
   const { tag } = await params;
   const { sort, sub, q } = await searchParams;
 
-  if (!VALID_TAGS.includes(tag as any)) notFound();
+ if (!isValidTag(tag)) notFound();
 
   const isAll = tag === "todos";
   const categoryTag = isAll ? undefined : (tag as CategoryTag);

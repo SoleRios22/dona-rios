@@ -121,7 +121,7 @@ export default function CheckoutForm({
 });
 
       if (res.error === "auth_required") {
-        window.location.href = "/login?next=/checkout";
+       router.push("/login?next=/checkout");
         return;
       }
       if (res.error === "empty_cart") {

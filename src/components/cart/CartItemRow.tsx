@@ -53,7 +53,14 @@ export default function CartItemRow({
   return (
     <div className={`flex gap-4 rounded-2xl border border-line bg-white p-4 ${isPending ? "opacity-60" : ""}`}>
       <Link href={`/producto/${productSlug}`} className="h-20 w-20 shrink-0 overflow-hidden rounded-xl">
-        <ProductVisual colorway={colorway} isBox={isBox} imageUrl={imageUrl} size={48} />
+        <ProductVisual
+  colorway={colorway}
+  isBox={isBox}
+  imageUrl={imageUrl}
+  size={48}
+  alt={productName}
+  imageSizes="80px"
+/>
       </Link>
       <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
         <div>
@@ -64,13 +71,32 @@ export default function CartItemRow({
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center overflow-hidden rounded-full border border-line">
-            <button onClick={() => changeQty(-1)} className="h-8 w-8 text-sm font-semibold">
-              −
-            </button>
-            <span className="w-7 text-center text-sm font-semibold">{qty}</span>
-            <button onClick={() => changeQty(1)} className="h-8 w-8 text-sm font-semibold">
-              +
-            </button>
+           <button
+  type="button"
+  onClick={() => changeQty(-1)}
+  disabled={isPending}
+  aria-label={`Disminuir cantidad de ${productName}`}
+  className="h-8 w-8 text-sm font-semibold disabled:opacity-50"
+>
+  −
+</button>
+
+<span
+  className="w-7 text-center text-sm font-semibold"
+  aria-live="polite"
+>
+  {qty}
+</span>
+
+<button
+  type="button"
+  onClick={() => changeQty(1)}
+  disabled={isPending}
+  aria-label={`Aumentar cantidad de ${productName}`}
+  className="h-8 w-8 text-sm font-semibold disabled:opacity-50"
+>
+  +
+</button>
           </div>
           <span className="font-display font-semibold">{formatCurrency(unitPrice * qty)}</span>
         </div>
