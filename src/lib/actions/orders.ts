@@ -14,6 +14,7 @@ interface CheckoutInput {
   address?: string;
   neighborhood?: string;
   pickupPoint?: string;
+  forceShippingQuote?: boolean;
 }
 
 interface AtomicOrderResult {
@@ -21,6 +22,12 @@ interface AtomicOrderResult {
   order_subtotal: number | string;
   order_discount: number | string;
   order_total: number | string;
+}
+interface ShippingQuoteResult {
+  order_id: string;
+  order_subtotal: number | string;
+  order_discount: number | string;
+  order_partial_total: number | string;
 }
 
 export async function confirmOrder(input: CheckoutInput) {
@@ -130,36 +137,122 @@ export async function confirmOrder(input: CheckoutInput) {
       };
     }
 
-    const shippingResult = await calculateShippingForAddress(
+   const shippingResult = input.forceShippingQuote
+  ? null
+  : await calculateShippingForAddress(
       input.address,
       input.neighborhood ?? "",
       subtotal
     );
 
-    if (shippingResult.error || shippingResult.cost == null) {
-      const quoteMessage = [
-        "🥑 Consulta de envío — Doña Ríos",
-        ...lines,
-        `Subtotal de productos: $${subtotal.toLocaleString("es-AR")}`,
-        `Dirección: ${input.address.trim()}`,
-        ...(input.neighborhood?.trim()
-          ? [`Barrio: ${input.neighborhood.trim()}`]
-          : []),
-        `Pago: ${paymentLabels[input.paymentMethod]}`,
-        "",
-        "El calculador no encontró mi dirección. ¿Me confirman el costo de envío?",
-      ].join("\n");
+if (
+  input.forceShippingQuote ||
+  !shippingResult ||
+  shippingResult.error ||
+  shippingResult.cost == null
+) {
+  const { data: quote, error: quoteError } = await supabaseAdmin
+    .rpc("create_shipping_quote_from_cart", {
+      p_user_id: auth.user.id,
+      p_payment_method: input.paymentMethod,
+      p_address: input.address.trim(),
+      p_neighborhood: input.neighborhood?.trim() ?? "",
+      p_expected_subtotal: subtotal,
+    })
+    .single();
 
+  if (quoteError || !quote) {
+    const databaseMessage = quoteError?.message ?? "";
+
+    if (databaseMessage.includes("empty_cart")) {
       return {
-        error: "shipping_quote_required" as const,
-        whatsappUrl: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
-          quoteMessage
-        )}`,
+        error: "empty_cart" as const,
+        whatsappUrl: null,
       };
     }
 
-    shippingCost = shippingResult.cost;
-    shippingDistanceKm = shippingResult.distanceKm ?? null;
+    if (databaseMessage.includes("insufficient_stock")) {
+      return {
+        error: "insufficient_stock" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    if (databaseMessage.includes("cart_changed")) {
+      return {
+        error: "cart_changed" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    if (databaseMessage.includes("invalid_variant")) {
+      return {
+        error: "invalid_variant" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    return {
+      error: "order_failed" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  const shippingQuote = quote as ShippingQuoteResult;
+  const orderId = shippingQuote.order_id;
+  const finalSubtotal = Number(shippingQuote.order_subtotal);
+  const discount = Number(shippingQuote.order_discount);
+  const partialTotal = Number(
+    shippingQuote.order_partial_total
+  );
+
+  const quoteMessage = [
+    "🥑 Pedido con envío a cotizar — Doña Ríos",
+    ...lines,
+    `Subtotal: $${finalSubtotal.toLocaleString("es-AR")}`,
+    ...(discount > 0
+      ? [
+          `Descuento efectivo (10%): -$${discount.toLocaleString(
+            "es-AR"
+          )}`,
+        ]
+      : []),
+    `Total parcial: $${partialTotal.toLocaleString("es-AR")}`,
+    "Envío: a confirmar",
+    `Dirección: ${input.address.trim()}`,
+    ...(input.neighborhood?.trim()
+      ? [`Barrio: ${input.neighborhood.trim()}`]
+      : []),
+    `Pago: ${paymentLabels[input.paymentMethod]}`,
+    `N° de pedido: ${orderId.slice(0, 8)}`,
+    "",
+    "El calculador no encontró mi dirección. ¿Me confirman el costo de envío?",
+  ].join("\n");
+
+  await supabaseAdmin
+    .from("orders")
+    .update({ whatsapp_message: quoteMessage })
+    .eq("id", orderId);
+
+  const whatsappUrl =
+    `https://wa.me/${WHATSAPP_NUMBER}` +
+    `?text=${encodeURIComponent(quoteMessage)}`;
+
+  revalidatePath("/");
+  revalidatePath("/carrito");
+  revalidatePath("/pedidos");
+
+  return {
+    error: "shipping_quote_created" as const,
+    whatsappUrl,
+    orderId,
+    message: quoteMessage,
+    total: partialTotal,
+  };
+}
+
+shippingCost = shippingResult.cost;
+shippingDistanceKm = shippingResult.distanceKm ?? null;
   }
 
   const { data: order, error: orderError } = await supabaseAdmin
@@ -280,7 +373,10 @@ export async function getOrderHistory() {
 
   const { data: orders } = await supabase
     .from("orders")
-    .select(`id, total, status, fulfillment, payment_method, created_at, order_items(product_name_snapshot, quantity, unit_price)`)
+   .select(
+  `id, total, status, fulfillment, payment_method, shipping_cost, shipping_pending, created_at,
+   order_items(product_name_snapshot, quantity, unit_price)`
+)
     .eq("user_id", auth.user.id)
     .order("created_at", { ascending: false });
 
@@ -305,59 +401,211 @@ export async function getAllOrdersForAdmin() {
   const { data: orders } = await supabase
     .from("orders")
     .select(
-      `id, total, status, fulfillment, payment_method, address, neighborhood, pickup_point, created_at,
-       profiles(full_name),
-       order_items(product_name_snapshot, quantity, unit_price)`
+      `id, total, status, fulfillment, payment_method, address, neighborhood, pickup_point, shipping_cost, shipping_pending, created_at,
+ profiles(full_name),
+ order_items(product_name_snapshot, quantity, unit_price)`
     )
     .order("created_at", { ascending: false });
 
   return orders ?? [];
 }
 
-export async function updateOrderStatus(orderId: string, status: "pendiente" | "confirmado" | "entregado" | "cancelado") {
+export async function updateOrderStatus(
+  orderId: string,
+  status:
+    | "pendiente"
+    | "confirmado"
+    | "entregado"
+    | "cancelado"
+) {
   const supabase = await createClient();
-  if (!(await requireAdminForOrders(supabase))) return { error: "No tenés permisos de administrador." };
 
-const supabaseAdmin = createAdminClient();
+  if (!(await requireAdminForOrders(supabase))) {
+    return {
+      error: "No tenés permisos de administrador.",
+    };
+  }
 
-  const { data: currentOrder } = await supabase.from("orders").select("status").eq("id", orderId).maybeSingle();
-  if (!currentOrder) return { error: "No encontramos ese pedido." };
+  const supabaseAdmin = createAdminClient();
+
+  const { data: currentOrder } = await supabase
+    .from("orders")
+    .select("status, shipping_pending")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (!currentOrder) {
+    return {
+      error: "No encontramos ese pedido.",
+    };
+  }
+
+  /*
+   * Los pedidos con envío pendiente todavía no descontaron stock.
+   * Solo pueden mantenerse pendientes o cancelarse.
+   */
+  if (currentOrder.shipping_pending) {
+    if (status !== "pendiente" && status !== "cancelado") {
+      return {
+        error:
+          "Primero cargá el costo de envío para confirmar este pedido.",
+      };
+    }
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ status })
+      .eq("id", orderId);
+
+    if (error) {
+      return {
+        error: "No se pudo actualizar el estado.",
+      };
+    }
+
+    revalidatePath("/admin/pedidos");
+    revalidatePath("/admin");
+    revalidatePath("/pedidos");
+
+    return { error: null };
+  }
 
   const wasCancelled = currentOrder.status === "cancelado";
   const willBeCancelled = status === "cancelado";
 
-  const { error } = await supabase.from("orders").update({ status }).eq("id", orderId);
-  if (error) return { error: "No se pudo actualizar el estado." };
+  const { error } = await supabase
+    .from("orders")
+    .update({ status })
+    .eq("id", orderId);
 
-  // Si cambia hacia/desde "cancelado", ajustamos el stock (sumamos al cancelar, restamos si se reactiva).
+  if (error) {
+    return {
+      error: "No se pudo actualizar el estado.",
+    };
+  }
+
+  /*
+   * Los pedidos normales ya descontaron stock al crearse.
+   * Al cancelar se devuelve y al reactivar se vuelve a descontar.
+   */
   if (wasCancelled !== willBeCancelled) {
-    const { data: items } = await supabase.from("order_items").select("product_id, quantity").eq("order_id", orderId);
+    const { data: items } = await supabase
+      .from("order_items")
+      .select("product_id, quantity")
+      .eq("order_id", orderId);
+
     for (const item of items ?? []) {
       if (!item.product_id) continue;
-      
+
       if (willBeCancelled) {
-  await supabaseAdmin.rpc("increment_product_stock", {
-    p_product_id: item.product_id,
-    p_quantity: item.quantity,
-  });
-} else {
-  await supabaseAdmin.rpc("decrement_product_stock", {
-    p_product_id: item.product_id,
-    p_quantity: item.quantity,
-  });
-}
-    
+        await supabaseAdmin.rpc("increment_product_stock", {
+          p_product_id: item.product_id,
+          p_quantity: item.quantity,
+        });
+      } else {
+        await supabaseAdmin.rpc("decrement_product_stock", {
+          p_product_id: item.product_id,
+          p_quantity: item.quantity,
+        });
+      }
     }
   }
 
   revalidatePath("/admin/pedidos");
- 
   revalidatePath("/admin");
-  
   revalidatePath("/pedidos");
 
   return { error: null };
 }
+
+export async function confirmShippingQuoteOrder(
+  orderId: string,
+  shippingCost: number
+) {
+  const supabase = await createClient();
+
+  if (!(await requireAdminForOrders(supabase))) {
+    return {
+      error: "No tenés permisos de administrador.",
+      total: null,
+    };
+  }
+
+  if (!Number.isFinite(shippingCost) || shippingCost < 0) {
+    return {
+      error: "Ingresá un costo de envío válido.",
+      total: null,
+    };
+  }
+
+  const supabaseAdmin = createAdminClient();
+
+  const { data, error } = await supabaseAdmin
+    .rpc("confirm_shipping_quote_order", {
+      p_order_id: orderId,
+      p_shipping_cost: shippingCost,
+    })
+    .single();
+
+  if (error || !data) {
+    const databaseMessage = error?.message ?? "";
+
+    if (databaseMessage.includes("insufficient_stock")) {
+      return {
+        error:
+          "No hay stock suficiente para confirmar este pedido.",
+        total: null,
+      };
+    }
+
+    if (databaseMessage.includes("invalid_order_status")) {
+      return {
+        error:
+          "El pedido debe estar pendiente para poder confirmarlo.",
+        total: null,
+      };
+    }
+
+    if (
+      databaseMessage.includes("shipping_already_confirmed")
+    ) {
+      return {
+        error: "El envío de este pedido ya fue confirmado.",
+        total: null,
+      };
+    }
+
+    if (databaseMessage.includes("order_not_found")) {
+      return {
+        error: "No encontramos ese pedido.",
+        total: null,
+      };
+    }
+
+    return {
+      error: "No se pudo confirmar el pedido.",
+      total: null,
+    };
+  }
+
+  revalidatePath("/admin/pedidos");
+  revalidatePath("/admin");
+  revalidatePath("/pedidos");
+
+  return {
+    error: null,
+    total: Number(
+      (
+        data as {
+          confirmed_total: number | string;
+        }
+      ).confirmed_total
+    ),
+  };
+}
+
+
+
 // Para el dashboard: cantidad de pedidos pendientes + los últimos, sin traer todo el historial.
 export async function getPendingOrdersSummary(limit = 5) {
   const supabase = await createClient();

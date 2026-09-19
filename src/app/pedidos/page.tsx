@@ -52,9 +52,13 @@ export default async function OrdersPage() {
                       })}
                     </p>
                   </div>
-                  <span className={`rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}>
-                    {status.label}
-                  </span>
+                  <span
+  className={`rounded-full px-3 py-1.5 text-xs font-semibold ${status.className}`}
+>
+  {order.shipping_pending && order.status === "pendiente"
+    ? "Esperando costo de envío"
+    : status.label}
+</span>
                 </div>
 
                 <div className="mb-4 flex flex-col gap-1.5 border-t border-line pt-4">
@@ -77,8 +81,18 @@ export default async function OrdersPage() {
                       ]
                     }
                   </span>
-                  <span className="font-display text-lg font-semibold">{formatCurrency(order.total)}</span>
-                </div>
+                 <span className="text-right">
+  <strong className="block font-display text-lg font-semibold">
+    {formatCurrency(order.total)}
+  </strong>
+
+  {order.shipping_pending && (
+    <small className="text-honey-dark">
+      + envío a confirmar
+    </small>
+  )}
+</span>
+</div>
               </div>
             );
           })}

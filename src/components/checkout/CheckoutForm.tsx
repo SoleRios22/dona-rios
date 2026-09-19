@@ -81,47 +81,6 @@ export default function CheckoutForm({
   
   const readyToConfirm = fulfillment === "retiro" || shippingCalculated;
 
-const shippingInquiryUrl = useMemo(() => {
-  const itemLines = lines.map(
-    (line) =>
-      `${line.quantity}× ${line.name}${
-        line.variantLabel ? ` (${line.variantLabel})` : ""
-      }`
-  );
-
-  const paymentLabel =
-    PAYMENT_OPTIONS.find(
-      (option) => option.value === paymentMethod
-    )?.label ?? paymentMethod;
-
-  const inquiryMessage = [
-    "🥑 Consulta de envío — Doña Ríos",
-    ...itemLines,
-    `Subtotal de productos: ${formatCurrency(subtotal)}`,
-    ...(discount > 0
-      ? [`Descuento en efectivo: -${formatCurrency(discount)}`]
-      : []),
-    `Dirección: ${address.trim() || "Sin indicar"}`,
-    ...(neighborhood.trim()
-      ? [`Barrio: ${neighborhood.trim()}`]
-      : []),
-    `Pago: ${paymentLabel}`,
-    "",
-    "El calculador no encontró mi dirección. ¿Me confirman el costo de envío?",
-  ].join("\n");
-
-  return (
-    "https://wa.me/5493584315332" +
-    `?text=${encodeURIComponent(inquiryMessage)}`
-  );
-}, [
-  lines,
-  subtotal,
-  discount,
-  address,
-  neighborhood,
-  paymentMethod,
-]);
 
   const waPreview = useMemo(() => {
     const itemLines = lines.map((l) => `${l.quantity}× ${l.name}${l.variantLabel ? ` (${l.variantLabel})` : ""}`);
@@ -137,16 +96,20 @@ const shippingInquiryUrl = useMemo(() => {
     ].join("\n");
   }, [lines, subtotal, discount, total, fulfillment, address, pickupPoint, paymentMethod]);
 
-  function handleConfirm() {
+  function submitOrder(forceShippingQuote = false) {
     setError(null);
     if (fulfillment === "envio" && !address.trim()) {
       setError("Completá la dirección de envío.");
       return;
     }
-    if (fulfillment === "envio" && !shippingCalculated) {
-      setError("Calculá el costo de envío antes de confirmar.");
-      return;
-    }
+    if (
+  fulfillment === "envio" &&
+  !forceShippingQuote &&
+  !shippingCalculated
+) {
+  setError("Calculá el costo de envío antes de confirmar.");
+  return;
+}
     startTransition(async () => {
      const res = await confirmOrder({
   fulfillment,
@@ -154,6 +117,7 @@ const shippingInquiryUrl = useMemo(() => {
   address: fulfillment === "envio" ? address : undefined,
   neighborhood: fulfillment === "envio" ? neighborhood : undefined,
   pickupPoint: fulfillment === "retiro" ? pickupPoint : undefined,
+  forceShippingQuote,
 });
 
       if (res.error === "auth_required") {
@@ -171,13 +135,12 @@ if (res.error === "invalid_address") {
 }
 
 if (
-  res.error === "shipping_quote_required" &&
+  res.error === "shipping_quote_created" &&
   res.whatsappUrl
 ) {
   window.location.href = res.whatsappUrl;
   return;
 }
-
 if (res.error === "insufficient_stock") {
   setError(
     "Uno de los productos ya no tiene stock suficiente. Volvé al carrito para revisar las cantidades."
@@ -204,7 +167,13 @@ if (res.error === "cart_changed") {
       router.push(`/checkout/confirmado?${params.toString()}`);
     });
   }
+function handleConfirm() {
+  submitOrder(false);
+}
 
+function handleShippingQuote() {
+  submitOrder(true);
+}
   return (
     <div className="grid gap-10 md:grid-cols-[1fr_380px]">
       <div>
@@ -273,14 +242,21 @@ if (res.error === "cart_changed") {
               {shippingError && (
                 <div className="mt-3 rounded-xl bg-clay/10 p-3">
                   <p className="text-xs text-clay">{shippingError}</p>
-                  <a
-                    href={shippingInquiryUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-block text-xs font-semibold text-avocado-dark underline"
-                  >
-                    Consultar costo por WhatsApp
-                  </a>
+                 <button
+  type="button"
+  onClick={handleShippingQuote}
+  disabled={isPending}
+  className="mt-2 text-left text-xs font-semibold text-avocado-dark underline disabled:opacity-50"
+>
+  {isPending
+    ? "Guardando pedido..."
+    : "Guardar pedido y consultar costo por WhatsApp"}
+</button>
+
+<p className="mt-2 text-[11px] text-forest/55">
+  El pedido quedará pendiente. El stock se controlará cuando
+  confirmemos el costo del envío.
+</p>
                 </div>
               )}
 

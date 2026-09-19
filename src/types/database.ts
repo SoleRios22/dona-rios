@@ -122,6 +122,8 @@ export interface Database {
           neighborhood: string | null;
           pickup_point: string | null;
           shipping_cost: number;
+          shipping_distance_km: number | null;
+          shipping_pending: boolean;
           total: number;
           status: OrderStatus;
           whatsapp_message: string | null;
