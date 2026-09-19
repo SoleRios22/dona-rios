@@ -428,87 +428,47 @@ export async function updateOrderStatus(
 
   const supabaseAdmin = createAdminClient();
 
-  const { data: currentOrder } = await supabase
-    .from("orders")
-    .select("status, shipping_pending")
-    .eq("id", orderId)
-    .maybeSingle();
+  const { error } = await supabaseAdmin.rpc(
+    "update_order_status_with_stock",
+    {
+      p_order_id: orderId,
+      p_new_status: status,
+    }
+  );
 
-  if (!currentOrder) {
-    return {
-      error: "No encontramos ese pedido.",
-    };
-  }
+  if (error) {
+    const databaseMessage = error.message ?? "";
 
-  /*
-   * Los pedidos con envío pendiente todavía no descontaron stock.
-   * Solo pueden mantenerse pendientes o cancelarse.
-   */
-  if (currentOrder.shipping_pending) {
-    if (status !== "pendiente" && status !== "cancelado") {
+    if (databaseMessage.includes("order_not_found")) {
+      return {
+        error: "No encontramos ese pedido.",
+      };
+    }
+
+    if (databaseMessage.includes("shipping_cost_required")) {
       return {
         error:
           "Primero cargá el costo de envío para confirmar este pedido.",
       };
     }
 
-    const { error } = await supabase
-      .from("orders")
-      .update({ status })
-      .eq("id", orderId);
-
-    if (error) {
+    if (databaseMessage.includes("insufficient_stock")) {
       return {
-        error: "No se pudo actualizar el estado.",
+        error:
+          "No hay stock suficiente para reactivar este pedido.",
       };
     }
 
-    revalidatePath("/admin/pedidos");
-    revalidatePath("/admin");
-    revalidatePath("/pedidos");
-
-    return { error: null };
-  }
-
-  const wasCancelled = currentOrder.status === "cancelado";
-  const willBeCancelled = status === "cancelado";
-
-  const { error } = await supabase
-    .from("orders")
-    .update({ status })
-    .eq("id", orderId);
-
-  if (error) {
-    return {
-      error: "No se pudo actualizar el estado.",
-    };
-  }
-
-  /*
-   * Los pedidos normales ya descontaron stock al crearse.
-   * Al cancelar se devuelve y al reactivar se vuelve a descontar.
-   */
-  if (wasCancelled !== willBeCancelled) {
-    const { data: items } = await supabase
-      .from("order_items")
-      .select("product_id, quantity")
-      .eq("order_id", orderId);
-
-    for (const item of items ?? []) {
-      if (!item.product_id) continue;
-
-      if (willBeCancelled) {
-        await supabaseAdmin.rpc("increment_product_stock", {
-          p_product_id: item.product_id,
-          p_quantity: item.quantity,
-        });
-      } else {
-        await supabaseAdmin.rpc("decrement_product_stock", {
-          p_product_id: item.product_id,
-          p_quantity: item.quantity,
-        });
-      }
+    if (databaseMessage.includes("product_unavailable")) {
+      return {
+        error:
+          "Uno de los productos del pedido ya no está disponible.",
+      };
     }
+
+    return {
+      error: "No se pudo actualizar el estado del pedido.",
+    };
   }
 
   revalidatePath("/admin/pedidos");
@@ -517,7 +477,6 @@ export async function updateOrderStatus(
 
   return { error: null };
 }
-
 export async function confirmShippingQuoteOrder(
   orderId: string,
   shippingCost: number
