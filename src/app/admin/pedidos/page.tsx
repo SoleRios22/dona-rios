@@ -3,6 +3,8 @@ import OrderStatusSelect from "@/components/admin/OrderStatusSelect";
 import ShippingQuoteForm from "@/components/admin/ShippingQuoteForm";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { OrderStatus } from "@/types/database";
+import OrderConfirmationMessage from "@/components/admin/OrderConfirmationMessage";
+
 
 const PAYMENT_LABELS: Record<string, string> = {
   efectivo: "Efectivo",
@@ -104,6 +106,17 @@ export default async function AdminOrdersPage() {
                   order.status === "pendiente" && (
                     <ShippingQuoteForm orderId={order.id} />
                   )}
+                  {!order.shipping_pending &&
+  order.status === "confirmado" &&
+  order.fulfillment === "envio" && (
+    <OrderConfirmationMessage
+      orderId={order.id}
+      customerName={customerName}
+      total={Number(order.total)}
+      shippingCost={Number(order.shipping_cost)}
+      fulfillment="envio"
+    />
+  )}
 
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4 text-xs text-forest/60">
                   <span>
