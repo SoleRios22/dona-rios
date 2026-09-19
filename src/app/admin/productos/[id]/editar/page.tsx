@@ -39,7 +39,12 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
         subcategoryIds: (product.product_subcategories ?? []).map((ps) => ps.subcategory_id),
         variants: (product.product_variants ?? [])
           .sort((a, b) => a.label.localeCompare(b.label))
-          .map((v) => ({ label: v.label, priceDelta: v.price_delta, isDefault: v.is_default })),
+          .map((v) => ({
+  id: v.id,
+  label: v.label,
+  priceDelta: v.price_delta,
+  isDefault: v.is_default,
+})),
         nutrition: (product.product_nutrition ?? [])
           .sort((a, b) => a.sort_order - b.sort_order)
           .map((n) => ({ label: n.label, value: n.value })),

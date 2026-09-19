@@ -1,8 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import type { CategoryTag } from "@/types/database";
+
 
 export interface ProductFormInput {
   name: string;
@@ -21,7 +23,7 @@ export interface ProductFormInput {
   stock: number;
   tags: CategoryTag[];
   subcategoryIds: string[];
-  variants: { label: string; priceDelta: number; isDefault: boolean }[];
+  variants: { id?: string; label: string; priceDelta: number; isDefault: boolean }[];
   nutrition: { label: string; value: string }[];
   boxItems: { productId: string; quantity: number; name?: string }[];
 }
@@ -107,125 +109,151 @@ export async function getProductForEdit(id: string) {
   return { ...data, box_items: boxItems ?? [] };
 }
 
-export async function createProduct(input: ProductFormInput) {
-  const { supabase, ok, error } = await requireAdmin();
-  if (!ok) return { error };
+export async function createProduct(
+  input: ProductFormInput
+) {
+  const { ok, error } = await requireAdmin();
 
-  const { data: product, error: insertError } = await supabase
-    .from("products")
-    .insert({
-      name: input.name,
-      slug: input.slug,
-      short_description: input.shortDescription,
-      description: input.description,
-      price: input.price,
-      old_price: input.oldPrice,
-      unit: input.unit,
-      origin: input.origin,
-      suitable_for: input.suitableFor,
-      colorway: input.colorway,
-      image_url: input.imageUrl,
-      is_box: input.isBox,
-      is_active: input.isActive,
-      stock: input.stock,
-    })
-    .select("id")
-    .single();
-
-  if (insertError || !product) {
-    return { error: insertError?.message.includes("duplicate") ? "Ya existe un producto con ese slug." : "No se pudo crear el producto." };
+  if (!ok) {
+    return { error };
   }
 
-  await saveRelations(supabase, product.id, input);
+  const supabaseAdmin = createAdminClient();
+
+  const { data: productId, error: saveError } =
+    await supabaseAdmin.rpc(
+      "save_product_atomic",
+      buildProductRpcInput(null, input)
+    );
+
+  if (saveError || !productId) {
+    return {
+      error: mapProductSaveError(saveError),
+    };
+  }
+
   revalidatePath("/admin");
   revalidatePath("/admin/productos");
   revalidatePath("/");
-  return { error: null, id: product.id };
+
+  return {
+    error: null,
+    id: productId as string,
+  };
 }
 
-export async function updateProduct(id: string, input: ProductFormInput) {
-  const { supabase, ok, error } = await requireAdmin();
-  if (!ok) return { error };
+export async function updateProduct(
+  id: string,
+  input: ProductFormInput
+) {
+  const { ok, error } = await requireAdmin();
 
-  const { error: updateError } = await supabase
-    .from("products")
-    .update({
-      name: input.name,
-      slug: input.slug,
-      short_description: input.shortDescription,
-      description: input.description,
-      price: input.price,
-      old_price: input.oldPrice,
-      unit: input.unit,
-      origin: input.origin,
-      suitable_for: input.suitableFor,
-      colorway: input.colorway,
-      image_url: input.imageUrl,
-      is_box: input.isBox,
-      is_active: input.isActive,
-      stock: input.stock,
-    })
-    .eq("id", id);
+  if (!ok) {
+    return { error };
+  }
 
-  if (updateError) return { error: "No se pudo actualizar el producto." };
+  const supabaseAdmin = createAdminClient();
 
-  // Reemplazamos las relaciones enteras (más simple y confiable que hacer diffs)
-  await supabase.from("product_tags").delete().eq("product_id", id);
-  await supabase.from("product_subcategories").delete().eq("product_id", id);
-  await supabase.from("product_variants").delete().eq("product_id", id);
-  await supabase.from("product_nutrition").delete().eq("product_id", id);
-  await supabase.from("box_items").delete().eq("box_product_id", id);
-  await saveRelations(supabase, id, input);
+  const { data: productId, error: saveError } =
+    await supabaseAdmin.rpc(
+      "save_product_atomic",
+      buildProductRpcInput(id, input)
+    );
+
+  if (saveError || !productId) {
+    return {
+      error: mapProductSaveError(saveError),
+    };
+  }
 
   revalidatePath("/admin");
   revalidatePath("/admin/productos");
   revalidatePath("/");
   revalidatePath(`/producto/${input.slug}`);
-  return { error: null, id };
+
+  return {
+    error: null,
+    id,
+  };
 }
 
-async function saveRelations(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  productId: string,
+function buildProductRpcInput(
+  productId: string | null,
   input: ProductFormInput
 ) {
-  if (input.tags.length > 0) {
-    await supabase.from("product_tags").insert(input.tags.map((tag) => ({ product_id: productId, tag })));
+  return {
+    p_product_id: productId,
+    p_name: input.name,
+    p_slug: input.slug,
+    p_short_description: input.shortDescription,
+    p_description: input.description,
+    p_price: input.price,
+    p_old_price: input.oldPrice,
+    p_unit: input.unit,
+    p_origin: input.origin,
+    p_suitable_for: input.suitableFor,
+    p_colorway: input.colorway,
+    p_image_url: input.imageUrl,
+    p_is_box: input.isBox,
+    p_is_active: input.isActive,
+    p_stock: input.stock,
+    p_tags: input.tags,
+    p_subcategory_ids: input.subcategoryIds,
+
+    p_variants: input.variants.map((variant) => ({
+      id: variant.id ?? null,
+      label: variant.label,
+      price_delta: variant.priceDelta,
+      is_default: variant.isDefault,
+    })),
+
+    p_nutrition: input.nutrition.map(
+      (nutrition, index) => ({
+        label: nutrition.label,
+        value: nutrition.value,
+        sort_order: index,
+      })
+    ),
+
+    p_box_items: input.boxItems.map((item) => ({
+      product_id: item.productId,
+      quantity: item.quantity,
+    })),
+  };
+}
+
+function mapProductSaveError(
+  error: {
+    code?: string;
+    message?: string;
+  } | null
+) {
+  const message = error?.message ?? "";
+
+  if (
+    error?.code === "23505" ||
+    message.includes("duplicate")
+  ) {
+    return "Ya existe un producto con ese slug o un dato repetido.";
   }
-  if (input.subcategoryIds.length > 0) {
-    await supabase
-      .from("product_subcategories")
-      .insert(input.subcategoryIds.map((subcategory_id) => ({ product_id: productId, subcategory_id })));
+
+  if (error?.code === "23503") {
+    return "No podés eliminar una variante que ya está usada en un carrito o pedido.";
   }
-  if (input.variants.length > 0) {
-    await supabase.from("product_variants").insert(
-      input.variants.map((v) => ({
-        product_id: productId,
-        label: v.label,
-        price_delta: v.priceDelta,
-        is_default: v.isDefault,
-      }))
-    );
+
+  if (message.includes("invalid_product_values")) {
+    return "Revisá el precio y el stock del producto.";
   }
-  if (input.nutrition.length > 0) {
-    await supabase.from("product_nutrition").insert(
-      input.nutrition.map((n, i) => ({
-        product_id: productId,
-        label: n.label,
-        value: n.value,
-        sort_order: i,
-      }))
-    );
+
+  if (message.includes("product_not_found")) {
+    return "No encontramos el producto que querés editar.";
   }
-  if (input.isBox && input.boxItems.length > 0) {
-    await supabase.from("box_items").insert(
-      input.boxItems.map((item) => ({
-        box_product_id: productId,
-        included_product_id: item.productId,
-        quantity: item.quantity,
-      }))
-    );
+
+  if (message.includes("invalid_box_item")) {
+    return "Revisá los productos y cantidades del box.";
   }
+
+  return "No se pudo guardar el producto.";
 }
 
 export async function deleteProduct(id: string) {
