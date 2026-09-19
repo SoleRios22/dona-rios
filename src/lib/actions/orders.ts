@@ -16,107 +16,104 @@ interface CheckoutInput {
   pickupPoint?: string;
 }
 
+interface AtomicOrderResult {
+  order_id: string;
+  order_subtotal: number | string;
+  order_discount: number | string;
+  order_total: number | string;
+}
 
 export async function confirmOrder(input: CheckoutInput) {
   const supabase = await createClient();
+
   const { data: auth } = await supabase.auth.getUser();
-  if (!auth.user) return { error: "auth_required" as const, whatsappUrl: null };
+
+  if (!auth.user) {
+    return {
+      error: "auth_required" as const,
+      whatsappUrl: null,
+    };
+  }
+
   const supabaseAdmin = createAdminClient();
 
-  const { data: cart } = await supabase.from("carts").select("id").eq("user_id", auth.user.id).maybeSingle();
-  if (!cart) return { error: "empty_cart" as const, whatsappUrl: null };
+  if (!(["envio", "retiro"] as const).includes(input.fulfillment)) {
+    return {
+      error: "invalid_fulfillment" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  if (
+    !(
+      ["efectivo", "transferencia", "mercadopago", "tarjeta"] as const
+    ).includes(input.paymentMethod)
+  ) {
+    return {
+      error: "invalid_payment" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  const { data: cart } = await supabase
+    .from("carts")
+    .select("id")
+    .eq("user_id", auth.user.id)
+    .maybeSingle();
+
+  if (!cart) {
+    return {
+      error: "empty_cart" as const,
+      whatsappUrl: null,
+    };
+  }
 
   const { data: items } = await supabase
     .from("cart_items")
-    .select(`quantity, products(id, name, price), product_variants(label, price_delta)`)
+    .select(
+      `quantity,
+       products(id, name, price),
+       product_variants(label, price_delta)`
+    )
     .eq("cart_id", cart.id);
 
-  if (!items || items.length === 0) return { error: "empty_cart" as const, whatsappUrl: null };
+  if (!items || items.length === 0) {
+    return {
+      error: "empty_cart" as const,
+      whatsappUrl: null,
+    };
+  }
 
   const lines: string[] = [];
   let subtotal = 0;
 
   for (const item of items) {
-    const product = item.products as unknown as { id: string; name: string; price: number } | null;
-    const variant = item.product_variants as unknown as { label: string; price_delta: number } | null;
+    const product = item.products as unknown as {
+      id: string;
+      name: string;
+      price: number;
+    } | null;
+
+    const variant = item.product_variants as unknown as {
+      label: string;
+      price_delta: number;
+    } | null;
+
     if (!product) continue;
 
     const unitPrice = product.price + (variant?.price_delta ?? 0);
+
     subtotal += unitPrice * item.quantity;
-    lines.push(`${item.quantity}× ${product.name}${variant ? ` (${variant.label})` : ""}`);
-  }
- let shippingCost = 0;
-let shippingDistanceKm: number | null = null;
 
-if (input.fulfillment === "envio") {
-  if (!input.address?.trim()) {
-    return {
-      error: "invalid_address" as const,
-      whatsappUrl: null,
-    };
+    lines.push(
+      `${item.quantity}× ${product.name}${
+        variant ? ` (${variant.label})` : ""
+      }`
+    );
   }
 
-  const shippingResult = await calculateShippingForAddress(
-    input.address,
-    input.neighborhood ?? "",
-    subtotal
-  );
-
-  if (shippingResult.error || shippingResult.cost == null) {
-    return {
-      error: "shipping_failed" as const,
-      whatsappUrl: null,
-    };
-  }
-
-  shippingCost = shippingResult.cost;
-  shippingDistanceKm = shippingResult.distanceKm ?? null;
-}
-
-const CASH_DISCOUNT_RATE = 0.1;
-
-const discount =
-  input.paymentMethod === "efectivo"
-    ? Math.round(subtotal * CASH_DISCOUNT_RATE)
-    : 0;
-
-const total = subtotal - discount + shippingCost;
-
-  const { data: order, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      user_id: auth.user.id,
-      fulfillment: input.fulfillment,
-      payment_method: input.paymentMethod,
-      address: input.address ?? null,
-      neighborhood: input.neighborhood ?? null,
-      pickup_point: input.pickupPoint ?? null,
-      shipping_cost: shippingCost,
-      total,
-      status: "pendiente",
-            shipping_distance_km: shippingDistanceKm,
-    })
-    .select("id")
-    .single();
-
-  if (orderError || !order) return { error: "order_failed" as const, whatsappUrl: null };
-
-  for (const item of items) {
-    const product = item.products as unknown as { id: string; name: string; price: number } | null;
-    const variant = item.product_variants as unknown as { label: string; price_delta: number } | null;
-    if (!product) continue;
-    await supabase.from("order_items").insert({
-      order_id: order.id,
-      product_id: product.id,
-      product_name_snapshot: product.name,
-      unit_price: product.price + (variant?.price_delta ?? 0),
-      quantity: item.quantity,
-    });
-    await supabaseAdmin.rpc("decrement_product_stock", {
-    p_product_id: product.id,
-    p_quantity: item.quantity,
-    });
-  }
+  let shippingCost = 0;
+  let shippingDistanceKm: number | null = null;
 
   const paymentLabels: Record<OrderPayment, string> = {
     efectivo: "Efectivo",
@@ -125,34 +122,155 @@ const total = subtotal - discount + shippingCost;
     tarjeta: "Débito / Crédito",
   };
 
+  if (input.fulfillment === "envio") {
+    if (!input.address?.trim()) {
+      return {
+        error: "invalid_address" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    const shippingResult = await calculateShippingForAddress(
+      input.address,
+      input.neighborhood ?? "",
+      subtotal
+    );
+
+    if (shippingResult.error || shippingResult.cost == null) {
+      const quoteMessage = [
+        "🥑 Consulta de envío — Doña Ríos",
+        ...lines,
+        `Subtotal de productos: $${subtotal.toLocaleString("es-AR")}`,
+        `Dirección: ${input.address.trim()}`,
+        ...(input.neighborhood?.trim()
+          ? [`Barrio: ${input.neighborhood.trim()}`]
+          : []),
+        `Pago: ${paymentLabels[input.paymentMethod]}`,
+        "",
+        "El calculador no encontró mi dirección. ¿Me confirman el costo de envío?",
+      ].join("\n");
+
+      return {
+        error: "shipping_quote_required" as const,
+        whatsappUrl: `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
+          quoteMessage
+        )}`,
+      };
+    }
+
+    shippingCost = shippingResult.cost;
+    shippingDistanceKm = shippingResult.distanceKm ?? null;
+  }
+
+  const { data: order, error: orderError } = await supabaseAdmin
+    .rpc("create_order_from_cart", {
+      p_user_id: auth.user.id,
+      p_fulfillment: input.fulfillment,
+      p_payment_method: input.paymentMethod,
+      p_address:
+        input.fulfillment === "envio"
+          ? input.address?.trim() ?? null
+          : null,
+      p_neighborhood:
+        input.fulfillment === "envio"
+          ? input.neighborhood?.trim() ?? null
+          : null,
+      p_pickup_point:
+        input.fulfillment === "retiro"
+          ? input.pickupPoint ?? null
+          : null,
+      p_shipping_cost: shippingCost,
+      p_shipping_distance_km: shippingDistanceKm,
+      p_expected_subtotal: subtotal,
+    })
+    .single();
+
+  if (orderError || !order) {
+    const databaseMessage = orderError?.message ?? "";
+
+    if (databaseMessage.includes("empty_cart")) {
+      return {
+        error: "empty_cart" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    if (databaseMessage.includes("insufficient_stock")) {
+      return {
+        error: "insufficient_stock" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    if (databaseMessage.includes("cart_changed")) {
+      return {
+        error: "cart_changed" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    if (databaseMessage.includes("invalid_variant")) {
+      return {
+        error: "invalid_variant" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    return {
+      error: "order_failed" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  const atomicOrder = order as AtomicOrderResult;
+
+  const orderId = atomicOrder.order_id;
+  const finalSubtotal = Number(atomicOrder.order_subtotal);
+  const discount = Number(atomicOrder.order_discount);
+  const total = Number(atomicOrder.order_total);
+
   const message = [
     "🥑 Pedido Doña Ríos",
     ...lines,
-    `Subtotal: $${subtotal.toLocaleString("es-AR")}`,
-    ...(discount > 0 ? [`Descuento efectivo (10%): -$${discount.toLocaleString("es-AR")}`] : []),
+    `Subtotal: $${finalSubtotal.toLocaleString("es-AR")}`,
+    ...(discount > 0
+      ? [
+          `Descuento efectivo (10%): -$${discount.toLocaleString(
+            "es-AR"
+          )}`,
+        ]
+      : []),
     `Envío: $${shippingCost.toLocaleString("es-AR")}`,
     `Total: $${total.toLocaleString("es-AR")}`,
-    `Entrega: ${input.fulfillment === "envio" ? `Envío a ${input.address ?? "domicilio"}` : `Retiro en ${input.pickupPoint ?? "punto a coordinar"}`}`,
+    `Entrega: ${
+      input.fulfillment === "envio"
+        ? `Envío a ${input.address ?? "domicilio"}`
+        : `Retiro en ${input.pickupPoint ?? "punto a coordinar"}`
+    }`,
     `Pago: ${paymentLabels[input.paymentMethod]}`,
-    `N° de pedido: ${order.id.slice(0, 8)}`,
+    `N° de pedido: ${orderId.slice(0, 8)}`,
   ].join("\n");
 
-  await supabase.from("orders").update({ whatsapp_message: message }).eq("id", order.id);
-  await supabase.from("cart_items").delete().eq("cart_id", cart.id);
+  await supabaseAdmin
+    .from("orders")
+    .update({ whatsapp_message: message })
+    .eq("id", orderId);
 
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+  const whatsappUrl =
+    `https://wa.me/${WHATSAPP_NUMBER}` +
+    `?text=${encodeURIComponent(message)}`;
 
   revalidatePath("/");
   revalidatePath("/carrito");
   revalidatePath("/pedidos");
 
- return {
-  error: null,
-  whatsappUrl,
-  orderId: order.id,
-  message,
-  total,
-};
+  return {
+    error: null,
+    whatsappUrl,
+    orderId,
+    message,
+    total,
+  };
 }
 
 export async function getOrderHistory() {

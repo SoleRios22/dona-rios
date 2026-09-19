@@ -41,7 +41,7 @@ export default function CheckoutForm({
   const [error, setError] = useState<string | null>(null);
 
   const [shippingCost, setShippingCost] = useState<number | null>(null);
-  const [shippingDistanceKm, setShippingDistanceKm] = useState<number | null>(null);
+  
   const [freeShipping, setFreeShipping] = useState(false);
   const [shippingCalculated, setShippingCalculated] = useState(false);
   const [shippingError, setShippingError] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export default function CheckoutForm({
   function markShippingStale() {
     setShippingCalculated(false);
     setShippingCost(null);
-    setShippingDistanceKm(null);
+  
     setShippingError(null);
   }
 
@@ -69,7 +69,7 @@ export default function CheckoutForm({
         return;
       }
       setShippingCost(result.cost ?? 0);
-      setShippingDistanceKm(result.distanceKm ?? null);
+    
       setFreeShipping(!!result.freeShipping);
       setShippingCalculated(true);
     });
@@ -78,7 +78,50 @@ export default function CheckoutForm({
   const effectiveShippingCost = fulfillment === "envio" ? shippingCost ?? 0 : 0;
   const discount = paymentMethod === "efectivo" ? Math.round(subtotal * CASH_DISCOUNT_RATE) : 0;
   const total = subtotal - discount + effectiveShippingCost;
+  
   const readyToConfirm = fulfillment === "retiro" || shippingCalculated;
+
+const shippingInquiryUrl = useMemo(() => {
+  const itemLines = lines.map(
+    (line) =>
+      `${line.quantity}× ${line.name}${
+        line.variantLabel ? ` (${line.variantLabel})` : ""
+      }`
+  );
+
+  const paymentLabel =
+    PAYMENT_OPTIONS.find(
+      (option) => option.value === paymentMethod
+    )?.label ?? paymentMethod;
+
+  const inquiryMessage = [
+    "🥑 Consulta de envío — Doña Ríos",
+    ...itemLines,
+    `Subtotal de productos: ${formatCurrency(subtotal)}`,
+    ...(discount > 0
+      ? [`Descuento en efectivo: -${formatCurrency(discount)}`]
+      : []),
+    `Dirección: ${address.trim() || "Sin indicar"}`,
+    ...(neighborhood.trim()
+      ? [`Barrio: ${neighborhood.trim()}`]
+      : []),
+    `Pago: ${paymentLabel}`,
+    "",
+    "El calculador no encontró mi dirección. ¿Me confirman el costo de envío?",
+  ].join("\n");
+
+  return (
+    "https://wa.me/5493584315332" +
+    `?text=${encodeURIComponent(inquiryMessage)}`
+  );
+}, [
+  lines,
+  subtotal,
+  discount,
+  address,
+  neighborhood,
+  paymentMethod,
+]);
 
   const waPreview = useMemo(() => {
     const itemLines = lines.map((l) => `${l.quantity}× ${l.name}${l.variantLabel ? ` (${l.variantLabel})` : ""}`);
@@ -127,9 +170,24 @@ if (res.error === "invalid_address") {
   return;
 }
 
-if (res.error === "shipping_failed") {
+if (
+  res.error === "shipping_quote_required" &&
+  res.whatsappUrl
+) {
+  window.location.href = res.whatsappUrl;
+  return;
+}
+
+if (res.error === "insufficient_stock") {
   setError(
-    "No pudimos recalcular el envío. Revisá la dirección o probá nuevamente."
+    "Uno de los productos ya no tiene stock suficiente. Volvé al carrito para revisar las cantidades."
+  );
+  return;
+}
+
+if (res.error === "cart_changed") {
+  setError(
+    "El precio o el contenido del carrito cambió. Actualizá la página antes de continuar."
   );
   return;
 }
@@ -216,12 +274,12 @@ if (res.error === "shipping_failed") {
                 <div className="mt-3 rounded-xl bg-clay/10 p-3">
                   <p className="text-xs text-clay">{shippingError}</p>
                   <a
-                    href="https://wa.me/5493584315332"
+                    href={shippingInquiryUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-2 inline-block text-xs font-semibold text-avocado-dark underline"
                   >
-                    Escribinos por WhatsApp para coordinar el envío
+                    Consultar costo por WhatsApp
                   </a>
                 </div>
               )}
