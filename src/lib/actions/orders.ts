@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import type { OrderFulfillment, OrderPayment } from "@/types/database";
 
@@ -20,6 +21,7 @@ export async function confirmOrder(input: CheckoutInput) {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { error: "auth_required" as const, whatsappUrl: null };
+  const supabaseAdmin = createAdminClient();
 
   const { data: cart } = await supabase.from("carts").select("id").eq("user_id", auth.user.id).maybeSingle();
   if (!cart) return { error: "empty_cart" as const, whatsappUrl: null };
@@ -77,9 +79,9 @@ export async function confirmOrder(input: CheckoutInput) {
       unit_price: product.price + (variant?.price_delta ?? 0),
       quantity: item.quantity,
     });
-    await supabase.rpc("decrement_product_stock", {
-      p_product_id: product.id,
-      p_quantity: item.quantity,
+    await supabaseAdmin.rpc("decrement_product_stock", {
+    p_product_id: product.id,
+    p_quantity: item.quantity,
     });
   }
 
@@ -159,6 +161,8 @@ export async function updateOrderStatus(orderId: string, status: "pendiente" | "
   const supabase = await createClient();
   if (!(await requireAdminForOrders(supabase))) return { error: "No tenés permisos de administrador." };
 
+const supabaseAdmin = createAdminClient();
+
   const { data: currentOrder } = await supabase.from("orders").select("status").eq("id", orderId).maybeSingle();
   if (!currentOrder) return { error: "No encontramos ese pedido." };
 
@@ -173,8 +177,19 @@ export async function updateOrderStatus(orderId: string, status: "pendiente" | "
     const { data: items } = await supabase.from("order_items").select("product_id, quantity").eq("order_id", orderId);
     for (const item of items ?? []) {
       if (!item.product_id) continue;
-      const qty = willBeCancelled ? -item.quantity : item.quantity;
-      await supabase.rpc("decrement_product_stock", { p_product_id: item.product_id, p_quantity: qty });
+      
+      if (willBeCancelled) {
+  await supabaseAdmin.rpc("increment_product_stock", {
+    p_product_id: item.product_id,
+    p_quantity: item.quantity,
+  });
+} else {
+  await supabaseAdmin.rpc("decrement_product_stock", {
+    p_product_id: item.product_id,
+    p_quantity: item.quantity,
+  });
+}
+    
     }
   }
 
