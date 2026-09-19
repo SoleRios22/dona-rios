@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { formatCurrency } from "@/lib/utils/currency";
-import type { OrderFulfillment } from "@/types/database";
+import type { OrderStatus } from "@/types/database";
 
 interface OrderConfirmationMessageProps {
   orderId: string;
   customerName: string;
   total: number;
   shippingCost: number;
-  fulfillment: OrderFulfillment;
+  status: OrderStatus;
 }
 
 export default function OrderConfirmationMessage({
@@ -17,25 +17,45 @@ export default function OrderConfirmationMessage({
   customerName,
   total,
   shippingCost,
-  fulfillment,
+  status,
 }: OrderConfirmationMessageProps) {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(false);
 
+  const statusMessages: Partial<Record<OrderStatus, string>> = {
+    confirmado:
+      "Tu pedido fue confirmado ✅ Ya lo estamos preparando.",
+    en_preparacion:
+      "Tu pedido ya está en preparación 🥑",
+    en_camino:
+      "¡Tu pedido ya está en camino! 🚚",
+    entregado:
+      "Tu pedido figura como entregado ✅",
+  };
+
+  const closingMessages: Partial<Record<OrderStatus, string>> = {
+    confirmado:
+      "Te avisaremos cuando salga para entrega.",
+    en_preparacion:
+      "Te avisaremos apenas salga para entrega.",
+    en_camino:
+      "En breve estaremos llegando a la dirección acordada.",
+    entregado:
+      "¡Esperamos que lo disfrutes! Gracias por comprar en Doña Ríos.",
+  };
+
   const message = [
-    `¡Hola, ${customerName}! Tu pedido #${orderId.slice(
-      0,
-      8
-    )} fue confirmado ✅`,
+    `¡Hola, ${customerName}!`,
+    `${statusMessages[status] ?? "Tu pedido fue actualizado."}`,
     "",
-    ...(fulfillment === "envio"
-      ? [`Envío: ${formatCurrency(shippingCost)}`]
-      : ["Entrega: retiro en punto acordado"]),
-    `Total final: ${formatCurrency(total)}`,
+    `Pedido: #${orderId.slice(0, 8)}`,
+    `Envío: ${formatCurrency(shippingCost)}`,
+    `Total: ${formatCurrency(total)}`,
     "",
-    "Ya lo estamos preparando. Te avisaremos cuando salga para entrega.",
-    "¡Gracias por comprar en Doña Ríos! 🥑",
-  ].join("\n");
+    closingMessages[status] ?? "",
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   async function handleCopy() {
     try {
@@ -68,13 +88,12 @@ export default function OrderConfirmationMessage({
       >
         {copied
           ? "Mensaje copiado ✓"
-          : "Copiar confirmación para WhatsApp"}
+          : "Copiar aviso para WhatsApp"}
       </button>
 
       {error && (
         <p className="mt-2 text-xs text-clay">
-          No pudimos copiarlo. Probá seleccionando el texto
-          manualmente.
+          No pudimos copiar el mensaje. Probá nuevamente.
         </p>
       )}
     </div>

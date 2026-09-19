@@ -106,15 +106,20 @@ export default async function AdminOrdersPage() {
                   order.status === "pendiente" && (
                     <ShippingQuoteForm orderId={order.id} />
                   )}
-                  {!order.shipping_pending &&
-  order.status === "confirmado" &&
-  order.fulfillment === "envio" && (
+                {!order.shipping_pending &&
+  order.fulfillment === "envio" &&
+  [
+    "confirmado",
+    "en_preparacion",
+    "en_camino",
+    "entregado",
+  ].includes(order.status) && (
     <OrderConfirmationMessage
       orderId={order.id}
       customerName={customerName}
       total={Number(order.total)}
       shippingCost={Number(order.shipping_cost)}
-      fulfillment="envio"
+      status={order.status as OrderStatus}
     />
   )}
 
