@@ -19,7 +19,7 @@ export default function ProductTabs({
 
   return (
     <div className="max-w-[760px]">
-      <div className="mb-7 flex gap-1 overflow-x-auto border-b border-line sm:gap-2">
+    <div className="mb-7 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-line sm:gap-2">
         {tabs.map((t) => (
           <button
             key={t.id}
