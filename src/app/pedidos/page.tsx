@@ -9,6 +9,14 @@ import Breadcrumb from "@/components/Breadcrumb";
 const STATUS_LABELS: Record<OrderStatus, { label: string; className: string }> = {
   pendiente: { label: "Pendiente de confirmar", className: "bg-honey/20 text-honey-dark" },
   confirmado: { label: "Confirmado", className: "bg-avocado/15 text-avocado-dark" },
+  en_preparacion: {
+  label: "En preparación",
+  className: "bg-honey/20 text-honey-dark",
+},
+en_camino: {
+  label: "En camino",
+  className: "bg-avocado/15 text-avocado-dark",
+},
   entregado: { label: "Entregado", className: "bg-avocado text-cream" },
   cancelado: { label: "Cancelado", className: "bg-clay/10 text-clay" },
 };

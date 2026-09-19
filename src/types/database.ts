@@ -11,7 +11,13 @@ export const CATEGORY_LABELS: Record<CategoryTag, { label: string; emoji: string
 export type UserRole = "customer" | "admin";
 export type OrderFulfillment = "envio" | "retiro";
 export type OrderPayment = "efectivo" | "transferencia" | "mercadopago" | "tarjeta";
-export type OrderStatus = "pendiente" | "confirmado" | "entregado" | "cancelado";
+export type OrderStatus =
+  | "pendiente"
+  | "confirmado"
+  | "en_preparacion"
+  | "en_camino"
+  | "entregado"
+  | "cancelado";
 
 export interface Database {
   public: {

@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { updateOrderStatus } from "@/lib/actions/orders";
 import type { OrderStatus } from "@/types/database";
-
 const OPTIONS: { value: OrderStatus; label: string }[] = [
   {
     value: "pendiente",
@@ -13,6 +12,14 @@ const OPTIONS: { value: OrderStatus; label: string }[] = [
   {
     value: "confirmado",
     label: "Confirmado",
+  },
+  {
+    value: "en_preparacion",
+    label: "En preparación",
+  },
+  {
+    value: "en_camino",
+    label: "En camino",
   },
   {
     value: "entregado",

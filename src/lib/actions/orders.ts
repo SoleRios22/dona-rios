@@ -4,7 +4,11 @@ import { calculateShippingForAddress } from "@/lib/actions/shipping";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
-import type { OrderFulfillment, OrderPayment } from "@/types/database";
+import type {
+  OrderFulfillment,
+  OrderPayment,
+  OrderStatus,
+} from "@/types/database";
 
 const WHATSAPP_NUMBER = "5493584315332"; // el mismo que ya usan en su bio de Instagram
 
@@ -412,11 +416,7 @@ export async function getAllOrdersForAdmin() {
 
 export async function updateOrderStatus(
   orderId: string,
-  status:
-    | "pendiente"
-    | "confirmado"
-    | "entregado"
-    | "cancelado"
+ status: OrderStatus
 ) {
   const supabase = await createClient();
 
