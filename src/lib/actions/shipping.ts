@@ -21,7 +21,7 @@ const DEFAULT_SETTINGS: Omit<ShippingSettings, "id" | "updated_at"> = {
   free_shipping_threshold: null,
 };
 
-export async function getShippingSettings(): Promise<ShippingSettings> {
+async function getShippingSettingsInternal(): Promise<ShippingSettings> {
   const supabaseAdmin = createAdminClient();
   const { data } = await supabaseAdmin.from("shipping_settings").select("*").limit(1).maybeSingle();
   if (data) return data as ShippingSettings;
@@ -37,7 +37,15 @@ async function requireAdmin() {
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
   return { supabase, ok: profile?.role === "admin" };
 }
+export async function getShippingSettings(): Promise<ShippingSettings> {
+  const { ok } = await requireAdmin();
 
+  if (!ok) {
+    throw new Error("No tenés permisos de administrador.");
+  }
+
+  return getShippingSettingsInternal();
+}
 export async function updateShippingSettings(input: {
   originAddress: string;
   originLat: number;
@@ -82,16 +90,35 @@ export async function updateShippingSettings(input: {
 }
 
 export async function geocodeOriginAddress(address: string) {
-  const result = await geocodeAddress(address);
-  if (!result) return { error: "No pudimos encontrar esa dirección. Probá ser más específico." };
-  return { error: null, lat: result.lat, lng: result.lng, displayName: result.displayName };
-}
+  const { ok } = await requireAdmin();
 
+  if (!ok) {
+    return {
+      error: "No tenés permisos de administrador.",
+    };
+  }
+
+  const result = await geocodeAddress(address);
+
+  if (!result) {
+    return {
+      error:
+        "No pudimos encontrar esa dirección. Probá ser más específico.",
+    };
+  }
+
+  return {
+    error: null,
+    lat: result.lat,
+    lng: result.lng,
+    displayName: result.displayName,
+  };
+}
 // Usada desde el checkout público
 export async function calculateShippingForAddress(address: string, neighborhood: string, subtotal: number) {
   if (!address.trim()) return { error: "Ingresá una dirección." };
 
-  const settings = await getShippingSettings();
+  const settings = await getShippingSettingsInternal();
 
   if (settings.free_shipping_threshold != null && subtotal >= settings.free_shipping_threshold) {
     return { error: null, cost: 0, distanceKm: null, freeShipping: true };
