@@ -43,8 +43,9 @@ export async function confirmOrder(input: CheckoutInput) {
     subtotal += unitPrice * item.quantity;
     lines.push(`${item.quantity}× ${product.name}${variant ? ` (${variant.label})` : ""}`);
   }
-
-  const total = subtotal + input.shippingCost;
+ const CASH_DISCOUNT_RATE = 0.1; // 10% de descuento pagando en efectivo — mismo criterio que en CheckoutForm
+  const discount = input.paymentMethod === "efectivo" ? Math.round(subtotal * CASH_DISCOUNT_RATE) : 0;
+  const total = subtotal  - discount + input.shippingCost;
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
@@ -92,8 +93,10 @@ export async function confirmOrder(input: CheckoutInput) {
   const message = [
     "🥑 Pedido Doña Ríos",
     ...lines,
+    `Subtotal: $${subtotal.toLocaleString("es-AR")}`,
+    ...(discount > 0 ? [`Descuento efectivo (10%): -$${discount.toLocaleString("es-AR")}`] : []),
+    `Envío: $${input.shippingCost.toLocaleString("es-AR")}`,
     `Total: $${total.toLocaleString("es-AR")}`,
-        ...(input.shippingDistanceKm ? [`Distancia estimada: ${input.shippingDistanceKm} km`] : []),
     `Entrega: ${input.fulfillment === "envio" ? `Envío a ${input.address ?? "domicilio"}` : `Retiro en ${input.pickupPoint ?? "punto a coordinar"}`}`,
     `Pago: ${paymentLabels[input.paymentMethod]}`,
     `N° de pedido: ${order.id.slice(0, 8)}`,

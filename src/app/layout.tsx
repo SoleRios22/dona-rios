@@ -31,9 +31,9 @@ export const metadata: Metadata = {
     "dietética online Río Cuarto",
     "comida sin azúcar Río Cuarto",
     "tienda saludable Río Cuarto",
-"envío Río Cuarto",
-"comprar keto online Argentina",
-"productos low carb Argentina",
+    "envío Río Cuarto",
+    "comprar keto online Argentina",
+    "productos low carb Argentina",
   ],
   authors: [{ name: "Doña Ríos" }],
   alternates: { canonical: "/" },
@@ -53,11 +53,16 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   other: {
-  "geo.region": "AR-X",
-  "geo.placename": "Río Cuarto",
-  "geo.position": `${BUSINESS.geo.latitude};${BUSINESS.geo.longitude}`,
-  ICBM: `${BUSINESS.geo.latitude}, ${BUSINESS.geo.longitude}`,
-},
+    "geo.region": "AR-X",
+    "geo.placename": "Río Cuarto",
+    "geo.position": `${BUSINESS.geo.latitude};${BUSINESS.geo.longitude}`,
+    ICBM: `${BUSINESS.geo.latitude}, ${BUSINESS.geo.longitude}`,
+  },
+  verification: {
+    other: {
+      "facebook-domain-verification": "7rmiekwbhxeq4qqa0a4bz5ph3pizet",
+    },
+  },
 };
 
 // Datos estructurados de negocio local: ayudan tanto al SEO tradicional (Google)

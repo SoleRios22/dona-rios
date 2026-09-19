@@ -7,13 +7,14 @@ import { calculateShippingForAddress } from "@/lib/actions/shipping";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { OrderFulfillment, OrderPayment, PickupPoint } from "@/types/database";
 
+const CASH_DISCOUNT_RATE = 0.1; // 10% de descuento pagando en efectivo 
+
 const PAYMENT_OPTIONS: { value: OrderPayment; label: string; note: string }[] = [
-  { value: "efectivo", label: "Efectivo", note: "Al recibir el pedido" },
+  { value: "efectivo", label: "Efectivo", note: "10% OFF " },
   { value: "transferencia", label: "Transferencia", note: "Te pasamos el CBU por WhatsApp" },
   { value: "mercadopago", label: "Mercado Pago (QR)", note: "Al recibir el pedido" },
   { value: "tarjeta", label: "Débito / Crédito", note: "Al recibir el pedido" },
 ];
-
 interface CartLine {
   name: string;
   variantLabel: string | null;
@@ -45,6 +46,7 @@ export default function CheckoutForm({
   const [shippingCalculated, setShippingCalculated] = useState(false);
   const [shippingError, setShippingError] = useState<string | null>(null);
   const [isCalculatingShipping, startShippingCalculation] = useTransition();
+  
 
   function markShippingStale() {
     setShippingCalculated(false);
@@ -74,7 +76,8 @@ export default function CheckoutForm({
   }
 
   const effectiveShippingCost = fulfillment === "envio" ? shippingCost ?? 0 : 0;
-  const total = subtotal + effectiveShippingCost;
+  const discount = paymentMethod === "efectivo" ? Math.round(subtotal * CASH_DISCOUNT_RATE) : 0;
+  const total = subtotal - discount + effectiveShippingCost;
   const readyToConfirm = fulfillment === "retiro" || shippingCalculated;
 
   const waPreview = useMemo(() => {
@@ -83,11 +86,13 @@ export default function CheckoutForm({
     return [
       "🥑 Pedido Doña Ríos",
       ...itemLines,
+       `Subtotal: ${formatCurrency(subtotal)}`,
+      ...(discount > 0 ? [`Descuento efectivo (10%): -${formatCurrency(discount)}`] : []),
       `Total: ${formatCurrency(total)}`,
       `Entrega: ${fulfillment === "envio" ? `Envío a ${address || "domicilio"}` : `Retiro en ${pickupPoint}`}`,
       `Pago: ${paymentLabel}`,
     ].join("\n");
-  }, [lines, total, fulfillment, address, pickupPoint, paymentMethod]);
+  }, [lines, subtotal, discount, total, fulfillment, address, pickupPoint, paymentMethod]);
 
   function handleConfirm() {
     setError(null);
@@ -283,6 +288,16 @@ export default function CheckoutForm({
             <span>{formatCurrency(l.unitPrice * l.quantity)}</span>
           </div>
         ))}
+        <div className="mt-3 flex justify-between border-t border-line pt-3 text-sm text-forest/70">
+          <span>Subtotal</span>
+          <span>{formatCurrency(subtotal)}</span>
+        </div>
+        {discount > 0 && (
+          <div className="mt-2.5 flex justify-between text-sm font-semibold text-avocado-dark">
+            <span>Descuento efectivo (10%)</span>
+            <span>-{formatCurrency(discount)}</span>
+          </div>
+        )}
         <div className="mt-3 flex justify-between border-t border-line pt-3 text-sm text-forest/70">
           <span>Envío</span>
           <span>
