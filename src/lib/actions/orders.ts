@@ -1,5 +1,6 @@
 "use server";
 
+import { calculateShippingForAddress } from "@/lib/actions/shipping";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
@@ -13,9 +14,8 @@ interface CheckoutInput {
   address?: string;
   neighborhood?: string;
   pickupPoint?: string;
-  shippingCost: number;
-    shippingDistanceKm?: number;
 }
+
 
 export async function confirmOrder(input: CheckoutInput) {
   const supabase = await createClient();
@@ -45,9 +45,42 @@ export async function confirmOrder(input: CheckoutInput) {
     subtotal += unitPrice * item.quantity;
     lines.push(`${item.quantity}× ${product.name}${variant ? ` (${variant.label})` : ""}`);
   }
- const CASH_DISCOUNT_RATE = 0.1; // 10% de descuento pagando en efectivo — mismo criterio que en CheckoutForm
-  const discount = input.paymentMethod === "efectivo" ? Math.round(subtotal * CASH_DISCOUNT_RATE) : 0;
-  const total = subtotal  - discount + input.shippingCost;
+ let shippingCost = 0;
+let shippingDistanceKm: number | null = null;
+
+if (input.fulfillment === "envio") {
+  if (!input.address?.trim()) {
+    return {
+      error: "invalid_address" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  const shippingResult = await calculateShippingForAddress(
+    input.address,
+    input.neighborhood ?? "",
+    subtotal
+  );
+
+  if (shippingResult.error || shippingResult.cost == null) {
+    return {
+      error: "shipping_failed" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  shippingCost = shippingResult.cost;
+  shippingDistanceKm = shippingResult.distanceKm ?? null;
+}
+
+const CASH_DISCOUNT_RATE = 0.1;
+
+const discount =
+  input.paymentMethod === "efectivo"
+    ? Math.round(subtotal * CASH_DISCOUNT_RATE)
+    : 0;
+
+const total = subtotal - discount + shippingCost;
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
@@ -58,10 +91,10 @@ export async function confirmOrder(input: CheckoutInput) {
       address: input.address ?? null,
       neighborhood: input.neighborhood ?? null,
       pickup_point: input.pickupPoint ?? null,
-      shipping_cost: input.shippingCost,
+      shipping_cost: shippingCost,
       total,
       status: "pendiente",
-            shipping_distance_km: input.shippingDistanceKm ?? null,
+            shipping_distance_km: shippingDistanceKm,
     })
     .select("id")
     .single();
@@ -97,7 +130,7 @@ export async function confirmOrder(input: CheckoutInput) {
     ...lines,
     `Subtotal: $${subtotal.toLocaleString("es-AR")}`,
     ...(discount > 0 ? [`Descuento efectivo (10%): -$${discount.toLocaleString("es-AR")}`] : []),
-    `Envío: $${input.shippingCost.toLocaleString("es-AR")}`,
+    `Envío: $${shippingCost.toLocaleString("es-AR")}`,
     `Total: $${total.toLocaleString("es-AR")}`,
     `Entrega: ${input.fulfillment === "envio" ? `Envío a ${input.address ?? "domicilio"}` : `Retiro en ${input.pickupPoint ?? "punto a coordinar"}`}`,
     `Pago: ${paymentLabels[input.paymentMethod]}`,
@@ -113,7 +146,13 @@ export async function confirmOrder(input: CheckoutInput) {
   revalidatePath("/carrito");
   revalidatePath("/pedidos");
 
-  return { error: null, whatsappUrl, orderId: order.id, message };
+ return {
+  error: null,
+  whatsappUrl,
+  orderId: order.id,
+  message,
+  total,
+};
 }
 
 export async function getOrderHistory() {

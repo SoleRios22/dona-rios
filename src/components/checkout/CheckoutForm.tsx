@@ -105,15 +105,13 @@ export default function CheckoutForm({
       return;
     }
     startTransition(async () => {
-      const res = await confirmOrder({
-        fulfillment,
-        paymentMethod,
-        address: fulfillment === "envio" ? address : undefined,
-        neighborhood: fulfillment === "envio" ? neighborhood : undefined,
-        pickupPoint: fulfillment === "retiro" ? pickupPoint : undefined,
-        shippingCost: effectiveShippingCost,
-        shippingDistanceKm: fulfillment === "envio" ? shippingDistanceKm ?? undefined : undefined,
-      });
+     const res = await confirmOrder({
+  fulfillment,
+  paymentMethod,
+  address: fulfillment === "envio" ? address : undefined,
+  neighborhood: fulfillment === "envio" ? neighborhood : undefined,
+  pickupPoint: fulfillment === "retiro" ? pickupPoint : undefined,
+});
 
       if (res.error === "auth_required") {
         window.location.href = "/login?next=/checkout";
@@ -123,11 +121,28 @@ export default function CheckoutForm({
         setError("Tu carrito está vacío.");
         return;
       }
+
+if (res.error === "invalid_address") {
+  setError("Completá una dirección válida para el envío.");
+  return;
+}
+
+if (res.error === "shipping_failed") {
+  setError(
+    "No pudimos recalcular el envío. Revisá la dirección o probá nuevamente."
+  );
+  return;
+}
+
       if (res.error || !res.whatsappUrl) {
         setError("No pudimos confirmar el pedido. Probá de nuevo.");
         return;
       }
-      const params = new URLSearchParams({ wa: res.whatsappUrl, total: String(total), fulfillment });
+     const params = new URLSearchParams({
+  wa: res.whatsappUrl,
+  total: String(res.total),
+  fulfillment,
+});
       router.push(`/checkout/confirmado?${params.toString()}`);
     });
   }
