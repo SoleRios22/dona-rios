@@ -192,7 +192,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <p className="mb-6 max-w-md text-[15.5px] text-forest/70">{product.short_description}</p>
           )}
 
-          <PurchasePanel productId={product.id} basePrice={product.price} variants={product.variants} />
+          <PurchasePanel
+              productId={product.id}
+              basePrice={product.price}
+              variants={product.variants}
+              stock={product.stock}
+            />
 
           <dl className="mt-6 flex flex-col gap-2.5 border-t border-line pt-5">
             {product.unit && (

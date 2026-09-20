@@ -22,6 +22,8 @@ export default function ProductCard({
     : activeTag && product.tags.includes(activeTag)
       ? activeTag
       : product.tags[0];
+  
+      const outOfStock = product.stock <= 0;
 
   return (
     <div className="relative rounded-[20px] border border-line bg-white p-5 transition hover:-translate-y-1.5 hover:shadow-[0_16px_30px_rgba(43,54,32,0.10)]">
@@ -64,13 +66,19 @@ export default function ProductCard({
 
       <div className="flex items-center justify-between">
         <span className="font-display text-lg font-semibold">{formatCurrency(product.price)}</span>
-       <AddToCartButton
-  productId={product.id}
-  productName={product.name}
-  variantId={
-    product.variants.find((variant) => variant.is_default)?.id ?? null
-  }
-/>
+      {outOfStock ? (
+  <span className="rounded-full bg-clay/10 px-3 py-2 text-xs font-semibold text-clay">
+    Sin stock
+  </span>
+) : (
+  <AddToCartButton
+    productId={product.id}
+    productName={product.name}
+    variantId={
+      product.variants.find((variant) => variant.is_default)?.id ?? null
+    }
+  />
+)}
       </div>
     </div>
   );
