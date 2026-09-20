@@ -54,12 +54,12 @@ export default function ProductCard({
       </Link>
 
       {product.reviewCount > 0 ? (
-        <div className="mb-3 flex items-center gap-1.5 text-xs text-forest/60">
+        <div className="mb-3 flex items-center gap-1.5 text-xs text-forest/70">
           <Stars rating={product.rating} size={12} />
           {product.rating} ({product.reviewCount})
         </div>
       ) : (
-        <div className="mb-3 text-xs text-forest/40">Sé el primero en valorarlo</div>
+        <div className="mb-3 text-xs text-forest/70">Sé el primero en valorarlo</div>
       )}
 
       <div className="flex items-center justify-between">

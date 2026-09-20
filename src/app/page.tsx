@@ -43,7 +43,7 @@ export default async function HomePage() {
   Cómo elegimos
 </Link>
             </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-forest/60">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-forest/70">
               <div><strong className="text-forest">1900+</strong> ya son parte de nuestra comunidad</div>
               <div><strong className="text-forest">Productos</strong> seleccionados</div>
               <div><strong className="text-forest">Envío</strong> o retiro</div>
@@ -141,7 +141,7 @@ export default async function HomePage() {
           <h2 className="text-[30px]">Armamos el combo por vos</h2>
         </div>
         {boxes.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center text-sm text-forest/60">
+          <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center text-sm text-forest/70">
             Todavía no armamos ningún box. ¡Pronto vas a poder combinar varios productos con un solo click!
           </div>
         ) : (
@@ -207,7 +207,7 @@ export default async function HomePage() {
               <span className="h-0.5 w-4 rounded bg-honey" /> Aprendé a elegir
             </p>
             <h2 className="mb-3.5 text-[30px] leading-tight">¿Keto y low carb son lo mismo? Te lo explicamos simple.</h2>
-            <p className="mb-6 max-w-md text-[15px] text-forest/60">
+            <p className="mb-6 max-w-md text-[15px] text-forest/70">
               Cada producto de nuestra selección viene con la info que necesitás para decidir — sin tecnicismos, sin
               promesas de salud, solo los datos de la etiqueta explicados claro.
             </p>
@@ -247,14 +247,14 @@ function TrustCard({
         </svg>
       </div>
       <h3 className="mb-1.5 text-lg">{title}</h3>
-      <p className="text-sm text-forest/60">{text}</p>
+      <p className="text-sm text-forest/70">{text}</p>
     </div>
   );
 }
 
 function EmptyCatalogNotice() {
   return (
-    <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center text-sm text-forest/60">
+    <div className="rounded-2xl border border-dashed border-line bg-white p-10 text-center text-sm text-forest/70">
       Todavía no hay productos cargados. Si sos el admin,{" "}
       <Link href="/admin/productos/nuevo" className="font-semibold text-avocado-dark underline">
         cargá el primero acá
