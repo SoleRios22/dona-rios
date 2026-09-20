@@ -6,6 +6,7 @@ import { getCart } from "@/lib/actions/cart";
 import { getFavoriteProductIds } from "@/lib/actions/favorites";
 
 const links = [
+  { href: "/categoria/todos", label: "Productos" },
   { href: "/categoria/keto", label: "Keto" },
   { href: "/categoria/low-carb", label: "Low carb" },
   { href: "/categoria/sin-gluten", label: "Sin gluten" },

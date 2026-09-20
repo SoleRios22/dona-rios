@@ -64,7 +64,13 @@ export default function ProductCard({
 
       <div className="flex items-center justify-between">
         <span className="font-display text-lg font-semibold">{formatCurrency(product.price)}</span>
-        <AddToCartButton productId={product.id} variantId={product.variants.find((v) => v.is_default)?.id ?? null} />
+       <AddToCartButton
+  productId={product.id}
+  productName={product.name}
+  variantId={
+    product.variants.find((variant) => variant.is_default)?.id ?? null
+  }
+/>
       </div>
     </div>
   );

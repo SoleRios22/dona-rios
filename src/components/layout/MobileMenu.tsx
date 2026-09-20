@@ -5,10 +5,14 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 
 const links = [
+  { href: "/categoria/todos", label: "Todos los productos" },
   { href: "/categoria/keto", label: "Keto" },
   { href: "/categoria/low-carb", label: "Low carb" },
   { href: "/categoria/sin-gluten", label: "Sin gluten" },
   { href: "/categoria/seleccion", label: "Selección Doña Ríos" },
+  { href: "/guias", label: "Guías para elegir" },
+  { href: "/sobre-nosotros", label: "Sobre Doña Ríos" },
+  { href: "/contacto", label: "Contacto" },
 ];
 
 export default function MobileMenu() {
