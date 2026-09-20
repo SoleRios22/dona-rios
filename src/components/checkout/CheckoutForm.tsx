@@ -184,18 +184,22 @@ function handleShippingQuote() {
           </h2>
           <div className="mb-5 flex gap-2.5">
             <button
+              type="button"
+              aria-pressed={fulfillment === "envio"}
               onClick={() => setFulfillment("envio")}
               className={`flex-1 rounded-2xl border-2 p-4 text-center ${fulfillment === "envio" ? "border-avocado bg-cream-2" : "border-line"}`}
             >
               <strong className="block text-sm">🚚 Envío a domicilio</strong>
-              <small className="text-forest/50">En Río Cuarto · según distancia</small>
+              <small className="text-forest/70">En Río Cuarto · según distancia</small>
             </button>
             <button
+              type="button"
+              aria-pressed={fulfillment === "retiro"}
               onClick={() => setFulfillment("retiro")}
               className={`flex-1 rounded-2xl border-2 p-4 text-center ${fulfillment === "retiro" ? "border-avocado bg-cream-2" : "border-line"}`}
             >
               <strong className="block text-sm">🏠 Retiro en punto</strong>
-              <small className="text-forest/50">Sin costo</small>
+              <small className="text-forest/70">Sin costo</small>
             </button>
           </div>
 
@@ -241,7 +245,9 @@ function handleShippingQuote() {
 
               {shippingError && (
                 <div className="mt-3 rounded-xl bg-clay/10 p-3">
-                  <p className="text-xs text-clay">{shippingError}</p>
+                  <p role="alert" className="text-xs text-clay">
+                    {shippingError}
+                  </p>
                  <button
   type="button"
   onClick={handleShippingQuote}
@@ -253,7 +259,7 @@ function handleShippingQuote() {
     : "Guardar pedido y consultar costo por WhatsApp"}
 </button>
 
-<p className="mt-2 text-[11px] text-forest/55">
+<p className="mt-2 text-[11px] text-forest/70">
   El pedido quedará pendiente. El stock se controlará cuando
   confirmemos el costo del envío.
 </p>
@@ -268,7 +274,7 @@ function handleShippingQuote() {
                     <div>
                      
                       <div className="flex justify-between">
-                        <span className="text-forest/60">Costo de envío</span>
+                        <span className="text-forest/70">Costo de envío</span>
                         <span className="font-display font-semibold">{formatCurrency(shippingCost ?? 0)}</span>
                       </div>
                     </div>
@@ -293,7 +299,7 @@ function handleShippingQuote() {
                   <option value="A coordinar por WhatsApp">A coordinar por WhatsApp</option>
                 </select>
               ) : (
-                <p className="rounded-xl bg-cream-2 px-3.5 py-2.5 text-sm text-forest/60">
+                <p className="rounded-xl bg-cream-2 px-3.5 py-2.5 text-sm text-forest/70">
                   Coordinamos el lugar de retiro por WhatsApp.
                 </p>
               )}
@@ -310,17 +316,19 @@ function handleShippingQuote() {
             {PAYMENT_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
+                type="button"
+                aria-pressed={paymentMethod === opt.value}
                 onClick={() => setPaymentMethod(opt.value)}
                 className={`flex flex-col items-start gap-0.5 rounded-2xl border-2 px-4 py-3.5 text-left sm:flex-row sm:items-center sm:justify-between sm:gap-2 ${
                   paymentMethod === opt.value ? "border-avocado bg-cream-2" : "border-line"
                 }`}
               >
                 <span className="text-sm font-semibold">{opt.label}</span>
-                <span className="text-xs text-forest/40">{opt.note}</span>
+                <span className="text-xs text-forest/70">{opt.note}</span>
               </button>
             ))}
           </div>
-          <p className="mt-4 rounded-xl bg-cream-2 px-4 py-3 text-xs text-forest/60">
+          <p className="mt-4 rounded-xl bg-cream-2 px-4 py-3 text-xs text-forest/70">
             No cobramos nada acá. Elegís tu forma de pago preferida y la confirmamos juntos por WhatsApp antes
             de coordinar la entrega.
           </p>
@@ -369,12 +377,20 @@ function handleShippingQuote() {
           <pre className="whitespace-pre-wrap rounded-lg bg-white p-3 font-sans">{waPreview}</pre>
         </div>
 
-        {error && <p className="mb-3 rounded-lg bg-clay/10 px-3 py-2 text-xs text-clay">{error}</p>}
+        {error && (
+          <p
+            role="alert"
+            className="mb-3 rounded-lg bg-clay/10 px-3 py-2 text-xs text-clay"
+          >
+            {error}
+          </p>
+        )}
         {fulfillment === "envio" && !shippingCalculated && !error && (
-          <p className="mb-3 text-center text-xs text-forest/50">Calculá el costo de envío para continuar</p>
+          <p className="mb-3 text-center text-xs text-forest/70">Calculá el costo de envío para continuar</p>
         )}
 
         <button
+          type="button"
           onClick={handleConfirm}
           disabled={isPending || !readyToConfirm}
           className="w-full rounded-full bg-honey py-3.5 font-semibold text-forest shadow-[0_5px_0_var(--color-honey-dark)] disabled:opacity-60"

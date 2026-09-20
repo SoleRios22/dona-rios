@@ -88,18 +88,29 @@ export default async function CartPage() {
               <span>Subtotal</span>
               <span>{formatCurrency(subtotal)}</span>
             </div>
-            <p className="mb-5 text-xs text-forest/40">El envío se calcula en el siguiente paso.</p>
-            <div className="mb-5 flex justify-between border-t border-line pt-4 text-lg font-semibold">
-              <span>Total</span>
-              <span className="font-display">{formatCurrency(subtotal)}</span>
-            </div>
-            <Link
-              href="/checkout"
-              className="block w-full rounded-full bg-avocado py-3.5 text-center font-semibold text-cream shadow-[0_5px_0_var(--color-avocado-dark)]"
-            >
-              Continuar compra
-            </Link>
-          </div>
+           <p className="mb-5 text-xs leading-relaxed text-forest/70">
+  En el siguiente paso elegís la entrega y el medio de pago. Ahí calculamos
+  el envío y, si corresponde, el descuento por pago en efectivo.
+</p>
+
+<div className="mb-5 flex justify-between border-t border-line pt-4 text-lg font-semibold">
+  <span>Total parcial</span>
+  <span className="font-display">{formatCurrency(subtotal)}</span>
+</div>
+
+<Link
+  href="/checkout"
+  className="block w-full rounded-full bg-avocado py-3.5 text-center font-semibold text-cream shadow-[0_5px_0_var(--color-avocado-dark)]"
+>
+  Elegir entrega y pago
+</Link>
+
+<Link
+  href="/categoria/todos"
+  className="mt-4 block text-center text-sm font-semibold text-avocado-dark underline"
+>
+  Seguir comprando
+</Link>          </div>
         </div>
       )}
     </div>
