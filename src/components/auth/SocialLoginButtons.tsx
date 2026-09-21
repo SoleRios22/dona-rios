@@ -5,7 +5,7 @@ import { useState } from "react";
 
 type Provider = "google" | "facebook";
 
-const SHOW_FACEBOOK_LOGIN = false;
+const SHOW_FACEBOOK_LOGIN = true;
 
 export default function SocialLoginButtons({
   redirectTo = "/",
