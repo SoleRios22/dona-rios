@@ -3,8 +3,11 @@ import { getProducts } from "@/lib/data/products";
 import { getFavoriteProductIds } from "@/lib/actions/favorites";
 import ProductCard from "@/components/ProductCard";
 import { CATEGORY_LABELS, type CategoryTag } from "@/types/database";
+import type { Metadata } from "next";
 
-
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 const CATEGORY_STRIP: CategoryTag[] = ["keto", "low-carb", "sin-gluten", "sin-azucar", "seleccion"];
 
 export default async function HomePage() {

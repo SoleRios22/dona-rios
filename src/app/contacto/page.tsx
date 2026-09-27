@@ -1,5 +1,13 @@
 import ContactForm from "@/components/ContactForm";
 import Breadcrumb from "@/components/Breadcrumb";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contacto",
+  description:
+    "Contactá a Doña Ríos, tienda online de productos keto, low carb y sin gluten en Río Cuarto. Consultas por formulario o WhatsApp.",
+  alternates: { canonical: "/contacto" },
+};
 
 export default function ContactPage() {
   return (

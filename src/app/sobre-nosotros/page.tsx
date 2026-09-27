@@ -126,7 +126,7 @@ export default function AboutPage() {
               Ver productos
             </Link>
             <a
-              href="https://instagram.com/donarios_almacensaludable"
+              href="https://instagram.com/donariosok"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full border-2 border-forest px-6 py-3.5 font-semibold text-forest transition hover:-translate-y-0.5"

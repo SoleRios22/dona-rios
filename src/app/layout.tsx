@@ -35,8 +35,7 @@ export const metadata: Metadata = {
     "productos low carb Argentina",
   ],
   authors: [{ name: "Doña Ríos" }],
-  alternates: { canonical: "/" },
-  openGraph: {
+   openGraph: {
     type: "website",
     locale: "es_AR",
     url: SITE_URL,
@@ -51,12 +50,10 @@ export const metadata: Metadata = {
     description: SITE_DESCRIPTION,
   },
   robots: { index: true, follow: true },
-  other: {
-    "geo.region": "AR-X",
-    "geo.placename": "Río Cuarto",
-    "geo.position": `${BUSINESS.geo.latitude};${BUSINESS.geo.longitude}`,
-    ICBM: `${BUSINESS.geo.latitude}, ${BUSINESS.geo.longitude}`,
-  },
+other: {
+  "geo.region": "AR-X",
+  "geo.placename": "Río Cuarto",
+},
   verification: {
     other: {
       "facebook-domain-verification": "7rmiekwbhxeq4qqa0a4bz5ph3pizet",
@@ -86,12 +83,7 @@ const localBusinessJsonLd = {
     addressRegion: BUSINESS.region,
     addressCountry: BUSINESS.country,
   },
-  geo: {
-    "@type": "GeoCoordinates",
-    latitude: BUSINESS.geo.latitude,
-    longitude: BUSINESS.geo.longitude,
-  },
-  hasMap: `https://www.google.com/maps/search/?api=1&query=${BUSINESS.geo.latitude},${BUSINESS.geo.longitude}`,
+ 
   sameAs: [`https://instagram.com/${BUSINESS.instagram}`],
   priceRange: "$$",
   paymentAccepted: "Efectivo, Transferencia bancaria, Mercado Pago, Tarjeta de débito/crédito",
