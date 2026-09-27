@@ -4,8 +4,8 @@ import { signOut } from "@/lib/actions/auth";
 import Logo from "@/components/Logo";
 
 const WHATSAPP_NUMBER = "5493584315332";
-const INSTAGRAM_HANDLE = "donarios_almacensaludable";
-const FACEBOOK_URL = "https://www.facebook.com/donariosalmacensaludable"; // ajustá esta URL cuando tengas la página de Facebook creada
+const INSTAGRAM_HANDLE = "donariosok";
+const FACEBOOK_URL = "https://www.facebook.com/donariosok/"; // ajustá esta URL cuando tengas la página de Facebook creada
 
 export default async function Footer() {
   const supabase = await createClient();
