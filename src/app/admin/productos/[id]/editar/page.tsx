@@ -4,9 +4,37 @@ import { getSubcategories } from "@/lib/actions/subcategories";
 import ProductForm from "@/components/admin/ProductForm";
 import type { CategoryTag } from "@/types/database";
 
-export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
+
+export default async function EditProductPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ volver?: string }>;
+}) {
   const { id } = await params;
-  const [product, availableSubcategories, availableProducts] = await Promise.all([
+  const { volver } = await searchParams;
+
+  let returnTo = `/admin/productos#producto-${id}`;
+
+  if (volver) {
+    try {
+      const base = "https://donarios.example";
+      const destination = new URL(volver, base);
+
+      if (
+        destination.origin === base &&
+        destination.pathname === "/admin/productos"
+      ) {
+        returnTo =
+          destination.pathname +
+          destination.search +
+          `#producto-${id}`;
+      }
+    } catch {
+      // Conserva el regreso predeterminado si la URL no es válida.
+    }
+  }  const [product, availableSubcategories, availableProducts] = await Promise.all([
     getProductForEdit(id),
     getSubcategories(),
     getProductsForBoxPicker(),
@@ -18,6 +46,7 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     <ProductForm
       mode="edit"
       productId={product.id}
+      returnTo={returnTo}
       availableSubcategories={availableSubcategories}
       availableProducts={availableProducts.filter((p) => p.id !== product.id)}
       initial={{

@@ -1,31 +1,37 @@
 import Link from "next/link";
 import { getAllProductsForAdmin } from "@/lib/actions/products";
-import { CATEGORY_LABELS, type CategoryTag } from "@/types/database";
-import ActiveToggle from "@/components/admin/ActiveToggle";
-import DeleteProductButton from "@/components/admin/DeleteProductButton";
+import AdminProductList from "@/components/admin/AdminProductList";
+import {
+  CATEGORY_LABELS,
+  type CategoryTag,
+} from "@/types/database";
 
 export default async function AdminProductsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ buscar?: string }>;
+  searchParams: Promise<{
+    buscar?: string;
+    categoria?: string;
+  }>;
 }) {
   const products = await getAllProductsForAdmin();
-  const { buscar = "" } = await searchParams;
-  const query = buscar.trim().toLocaleLowerCase("es-AR");
+  const { buscar = "", categoria = "" } = await searchParams;
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLocaleLowerCase("es-AR").includes(query)
-  );
+  const initialCategory: CategoryTag | "" =
+    Object.prototype.hasOwnProperty.call(CATEGORY_LABELS, categoria)
+      ? (categoria as CategoryTag)
+      : "";
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl">Productos</h1>
           <p className="mt-1 text-sm text-forest/60">
             {products.length} productos cargados
           </p>
         </div>
+
         <Link
           href="/admin/productos/nuevo"
           className="rounded-full bg-avocado px-5 py-3 text-sm font-semibold text-cream shadow-[0_4px_0_var(--color-avocado-dark)]"
@@ -33,33 +39,6 @@ export default async function AdminProductsPage({
           + Nuevo producto
         </Link>
       </div>
-
-      {products.length > 0 && (
-        <form action="/admin/productos" className="mb-5 flex flex-wrap gap-2">
-          <input
-            type="search"
-            name="buscar"
-            defaultValue={buscar}
-            placeholder="Buscar producto por nombre..."
-            aria-label="Buscar producto por nombre"
-            className="w-full max-w-md rounded-xl border border-line bg-white px-4 py-3 text-sm outline-none focus:border-avocado"
-          />
-          <button
-            type="submit"
-            className="rounded-xl bg-avocado px-5 py-3 text-sm font-semibold text-cream"
-          >
-            Buscar
-          </button>
-          {query && (
-            <Link
-              href="/admin/productos"
-              className="self-center text-sm font-semibold text-avocado-dark underline"
-            >
-              Limpiar
-            </Link>
-          )}
-        </form>
-      )}
 
       {products.length === 0 ? (
         <div className="rounded-2xl border border-line bg-white p-10 text-center text-sm text-forest/60">
@@ -72,90 +51,12 @@ export default async function AdminProductsPage({
           </Link>
           .
         </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="rounded-2xl border border-line bg-white p-10 text-center text-sm text-forest/60">
-          No encontramos productos con el nombre «{buscar}».
-        </div>
       ) : (
-        <>
-          {query && (
-            <p className="mb-3 text-sm text-forest/70">
-              {filteredProducts.length} resultado
-              {filteredProducts.length === 1 ? "" : "s"} para «{buscar}»
-            </p>
-          )}
-
-          <div className="overflow-x-auto rounded-2xl border border-line bg-white">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead>
-                <tr className="border-b border-line bg-cream-2 text-xs uppercase tracking-wide text-forest/60">
-                  <th className="px-5 py-3 font-semibold">Producto</th>
-                  <th className="px-5 py-3 font-semibold">Categorías</th>
-                  <th className="px-5 py-3 font-semibold">Precio</th>
-                  <th className="px-5 py-3 font-semibold">Stock</th>
-                  <th className="px-5 py-3 font-semibold">Estado</th>
-                  <th className="px-5 py-3 font-semibold"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredProducts.map((p) => (
-                  <tr key={p.id} className="border-b border-line last:border-0">
-                    <td className="px-5 py-4 font-medium">
-                      {p.name}
-                      {p.is_box && (
-                        <span className="ml-2 text-xs text-honey-dark">
-                          ⭐ Box
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-wrap gap-1">
-                        {(p.product_tags ?? []).map((t) => {
-                          const tag = t.tag as CategoryTag;
-                          return (
-                            <span
-                              key={tag}
-                              className="rounded-full bg-cream-2 px-2 py-1 text-xs"
-                            >
-                              {CATEGORY_LABELS[tag]?.emoji}{" "}
-                              {CATEGORY_LABELS[tag]?.label}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 font-display font-semibold">
-                      ${p.price.toLocaleString("es-AR")}
-                    </td>
-                    <td className="px-5 py-4">
-                      <span
-                        className={
-                          p.stock <= 0 ? "font-semibold text-clay" : ""
-                        }
-                      >
-                        {p.stock}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <ActiveToggle id={p.id} isActive={p.is_active} />
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <Link
-                          href={`/admin/productos/${p.id}/editar`}
-                          className="text-xs font-semibold text-avocado-dark hover:underline"
-                        >
-                          Editar
-                        </Link>
-                        <DeleteProductButton id={p.id} name={p.name} />
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </>
+        <AdminProductList
+          products={products}
+          initialSearch={buscar}
+          initialCategory={initialCategory}
+        />
       )}
     </div>
   );

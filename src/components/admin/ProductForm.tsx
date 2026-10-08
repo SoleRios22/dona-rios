@@ -14,6 +14,7 @@ interface Props {
   initial?: Partial<ProductFormInput>;
   availableSubcategories: Subcategory[];
   availableProducts: { id: string; name: string; price: number }[];
+  returnTo?: string;
 }
 
 const ALL_TAGS: CategoryTag[] = [
@@ -32,7 +33,14 @@ const COLORWAYS = [
   { value: "cream", label: "Crema" },
 ];
 
-export default function ProductForm({ mode, productId, initial, availableSubcategories, availableProducts }: Props) {
+export default function ProductForm({
+  mode,
+  productId,
+  initial,
+  availableSubcategories,
+  availableProducts,
+  returnTo = "/admin/productos",
+}: Props)  {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +139,7 @@ export default function ProductForm({ mode, productId, initial, availableSubcate
       if (result.error) {
         setError(result.error);
       } else {
-        router.push("/admin");
+        router.push(mode === "edit" ? returnTo : "/admin");
       }
     });
   }
@@ -363,7 +371,7 @@ export default function ProductForm({ mode, productId, initial, availableSubcate
         >
           {isPending ? "Guardando..." : mode === "create" ? "Crear producto" : "Guardar cambios"}
         </button>
-        <button type="button" onClick={() => router.push("/admin")} className="rounded-full border-2 border-forest px-8 py-3.5 font-semibold">
+        <button type="button" onClick={() => router.push(mode === "edit" ? returnTo : "/admin")} className="rounded-full border-2 border-forest px-8 py-3.5 font-semibold">
           Cancelar
         </button>
       </div>
