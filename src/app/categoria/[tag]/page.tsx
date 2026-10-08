@@ -31,6 +31,8 @@ const CATEGORY_INTROS: Record<CategoryTag | "todos", string> = {
   "sin-gluten": "Elaborados específicamente sin gluten, con la aptitud aclarada en cada producto.",
   "sin-azucar": "Sin azúcares agregadas más allá de las propias del ingrediente.",
   seleccion: "Los productos que representan mejor lo que buscamos: calidad real, no cantidad.",
+  "frutos-secos":
+  "Almendras, nueces y mixes seleccionados para disfrutar solos o sumar a tus preparaciones.",
 };
 
 export async function generateMetadata({ params }: { params: Promise<{ tag: string }> }): Promise<Metadata> {

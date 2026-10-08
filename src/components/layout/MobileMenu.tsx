@@ -9,6 +9,7 @@ const links = [
   { href: "/categoria/keto", label: "Keto" },
   { href: "/categoria/low-carb", label: "Low carb" },
   { href: "/categoria/sin-gluten", label: "Sin gluten" },
+  { href: "/categoria/frutos-secos", label: "Frutos secos" },
   { href: "/categoria/seleccion", label: "Selección Doña Ríos" },
   { href: "/guias", label: "Guías para elegir" },
   { href: "/sobre-nosotros", label: "Sobre Doña Ríos" },

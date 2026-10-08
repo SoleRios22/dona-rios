@@ -16,7 +16,15 @@ interface Props {
   availableProducts: { id: string; name: string; price: number }[];
 }
 
-const ALL_TAGS: CategoryTag[] = ["keto", "low-carb", "sin-gluten", "sin-azucar", "seleccion"];
+const ALL_TAGS: CategoryTag[] = [
+  "keto",
+  "low-carb",
+  "sin-gluten",
+  "sin-azucar",
+  "seleccion",
+  "frutos-secos",
+];
+
 const COLORWAYS = [
   { value: "clay", label: "Terracota (dulce de leche, mermeladas)" },
   { value: "leaf", label: "Verde hoja" },

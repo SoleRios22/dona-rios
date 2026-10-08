@@ -8,7 +8,14 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
-const CATEGORY_STRIP: CategoryTag[] = ["keto", "low-carb", "sin-gluten", "sin-azucar", "seleccion"];
+const CATEGORY_STRIP: CategoryTag[] = [
+  "keto",
+  "low-carb",
+  "sin-gluten",
+  "sin-azucar",
+  "seleccion",
+  "frutos-secos",
+];
 
 export default async function HomePage() {
   const [allProducts, favoriteIds] = await Promise.all([getProducts(), getFavoriteProductIds()]);

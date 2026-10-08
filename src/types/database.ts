@@ -1,4 +1,10 @@
-export type CategoryTag = "keto" | "low-carb" | "sin-gluten" | "sin-azucar" | "seleccion";
+export type CategoryTag =
+  | "keto"
+  | "low-carb"
+  | "sin-gluten"
+  | "sin-azucar"
+  | "seleccion"
+  | "frutos-secos";
 
 export const CATEGORY_LABELS: Record<CategoryTag, { label: string; emoji: string }> = {
   keto: { label: "Keto", emoji: "🥑" },
@@ -6,6 +12,7 @@ export const CATEGORY_LABELS: Record<CategoryTag, { label: string; emoji: string
   "sin-gluten": { label: "Sin gluten", emoji: "🌾" },
   "sin-azucar": { label: "Sin azúcar", emoji: "💚" },
   seleccion: { label: "Selección DR", emoji: "⭐" },
+  "frutos-secos": { label: "Frutos secos", emoji: "🥜" },
 };
 
 export type UserRole = "customer" | "admin";
