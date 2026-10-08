@@ -9,6 +9,7 @@ export default function OrderConfirmedPage() {
   const wa = params.get("wa") ?? "";
   const total = Number(params.get("total") ?? 0);
   const fulfillment = params.get("fulfillment") ?? "envio";
+  const isGuest = params.get("guest") === "1";
 
   return (
     <div className="mx-auto max-w-md py-16 text-center">
@@ -45,10 +46,29 @@ export default function OrderConfirmedPage() {
       )}
 
       <div>
-        <Link href="/pedidos" className="text-sm font-semibold text-avocado-dark underline">
-          Ver mis pedidos
-        </Link>
-      </div>
+  {isGuest ? (
+    <>
+      <p className="mb-4 px-4 text-sm leading-relaxed text-forest/70">
+        Compraste como invitado. Enviá el mensaje por WhatsApp
+        para coordinar la confirmación y entrega de tu pedido.
+      </p>
+
+      <Link
+        href="/categoria/todos"
+        className="text-sm font-semibold text-avocado-dark underline"
+      >
+        Volver al catálogo
+      </Link>
+    </>
+  ) : (
+    <Link
+      href="/pedidos"
+      className="text-sm font-semibold text-avocado-dark underline"
+    >
+      Ver mis pedidos
+    </Link>
+  )}
+</div>
     </div>
   );
 }

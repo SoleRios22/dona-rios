@@ -62,7 +62,13 @@ export default async function AdminDashboardPage() {
             <div className="flex flex-col gap-3">
               {ordersSummary.recent.map((order) => {
                 const customerName =
-                  (order.profiles as unknown as { full_name: string | null } | null)?.full_name ?? "Cliente";
+  order.customer_name?.trim() ||
+  (
+    order.profiles as unknown as {
+      full_name: string | null;
+    } | null
+  )?.full_name ||
+  "Cliente";
                 return (
                   <Link
                     key={order.id}

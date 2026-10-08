@@ -23,17 +23,7 @@ interface CartVariantJoin {
 export default async function CartPage() {
   const cart = await getCart();
 
-  if (!cart.authenticated) {
-    return (
-      <div className="mx-auto flex min-h-[50vh] max-w-md flex-col items-center justify-center px-6 text-center">
-        <h1 className="mb-2 text-2xl">Tu carrito</h1>
-        <p className="mb-6 text-sm text-forest/60">Iniciá sesión para ver y guardar tu carrito.</p>
-        <Link href="/login?next=/carrito" className="rounded-full bg-avocado px-6 py-3 font-semibold text-cream">
-          Ingresar
-        </Link>
-      </div>
-    );
-  }
+
 
   const items = cart.items.map((item) => {
     const product = item.products as unknown as CartProductJoin | null;

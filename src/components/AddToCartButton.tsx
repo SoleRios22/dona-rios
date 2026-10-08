@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { addToCart } from "@/lib/actions/cart";
 
 type Feedback = "idle" | "added" | "error";
@@ -20,7 +20,7 @@ export default function AddToCartButton({
   children?: React.ReactNode;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
+  
   const [isPending, startTransition] = useTransition();
   const [feedback, setFeedback] = useState<Feedback>("idle");
 
@@ -36,11 +36,7 @@ export default function AddToCartButton({
     startTransition(async () => {
       const result = await addToCart(productId, variantId, 1);
 
-      if (result.error === "auth_required") {
-        router.push(`/login?next=${encodeURIComponent(pathname)}`);
-        return;
-      }
-
+     
       if (result.error) {
         setFeedback("error");
         resetFeedback();

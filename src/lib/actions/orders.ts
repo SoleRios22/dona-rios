@@ -9,6 +9,7 @@ import type {
   OrderPayment,
   OrderStatus,
 } from "@/types/database";
+import { cookies } from "next/headers";
 
 const WHATSAPP_NUMBER = "5493584315332"; // el mismo que ya usan en su bio de Instagram
 
@@ -19,6 +20,8 @@ interface CheckoutInput {
   neighborhood?: string;
   pickupPoint?: string;
   forceShippingQuote?: boolean;
+  customerName?: string;
+  customerPhone?: string;
 }
 
 interface AtomicOrderResult {
@@ -34,17 +37,314 @@ interface ShippingQuoteResult {
   order_partial_total: number | string;
 }
 
+async function confirmGuestOrder(input: CheckoutInput) {
+  const customerName = input.customerName?.trim() ?? "";
+  const customerPhone = (input.customerPhone ?? "").replace(/\D/g, "");
+
+  if (customerName.length < 2 || customerName.length > 120) {
+    return {
+      error: "invalid_customer_name" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  if (customerPhone.length < 10 || customerPhone.length > 15) {
+    return {
+      error: "invalid_customer_phone" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  if (!(["envio", "retiro"] as const).includes(input.fulfillment)) {
+    return {
+      error: "invalid_fulfillment" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  if (
+    !(["efectivo", "transferencia", "mercadopago", "tarjeta"] as const)
+      .includes(input.paymentMethod)
+  ) {
+    return {
+      error: "invalid_payment" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  const cookieStore = await cookies();
+  const guestToken = cookieStore.get("donarios_guest_cart")?.value;
+
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  if (!guestToken || !uuidPattern.test(guestToken)) {
+    return {
+      error: "empty_cart" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  const admin = createAdminClient();
+
+  const { data: cart, error: cartError } = await admin
+    .from("carts")
+    .select("id")
+    .eq("guest_token", guestToken)
+    .is("user_id", null)
+    .maybeSingle();
+
+  if (cartError) {
+    return {
+      error: "order_failed" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  if (!cart) {
+    return {
+      error: "empty_cart" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  const { data: items, error: itemsError } = await admin
+    .from("cart_items")
+    .select(
+      `quantity,
+       products(id, name, price),
+       product_variants(label, price_delta)`
+    )
+    .eq("cart_id", cart.id);
+
+  if (itemsError) {
+    return {
+      error: "order_failed" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  if (!items || items.length === 0) {
+    return {
+      error: "empty_cart" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  const lines: string[] = [];
+  let subtotal = 0;
+
+  for (const item of items) {
+    const product = item.products as unknown as {
+      id: string;
+      name: string;
+      price: number;
+    } | null;
+
+    const variant = item.product_variants as unknown as {
+      label: string;
+      price_delta: number;
+    } | null;
+
+    if (!product) {
+      return {
+        error: "product_unavailable" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    const unitPrice = product.price + (variant?.price_delta ?? 0);
+
+    subtotal += unitPrice * item.quantity;
+
+    lines.push(
+      `${item.quantity}× ${product.name}${
+        variant ? ` (${variant.label})` : ""
+      }`
+    );
+  }
+
+  let shippingCost = 0;
+  let shippingDistanceKm: number | null = null;
+  let shippingPending = false;
+
+  if (input.fulfillment === "envio") {
+    if (!input.address?.trim()) {
+      return {
+        error: "invalid_address" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    const shippingResult = input.forceShippingQuote
+      ? null
+      : await calculateShippingForAddress(
+          input.address,
+          input.neighborhood ?? "",
+          subtotal
+        );
+
+    if (
+      !shippingResult ||
+      shippingResult.error ||
+      shippingResult.cost == null
+    ) {
+      shippingPending = true;
+    } else {
+      shippingCost = shippingResult.cost;
+      shippingDistanceKm = shippingResult.distanceKm ?? null;
+    }
+  }
+
+  const { data: order, error: orderError } = await admin
+    .rpc("create_guest_order_from_cart", {
+      p_guest_token: guestToken,
+      p_customer_name: customerName,
+      p_customer_phone: customerPhone,
+      p_fulfillment: input.fulfillment,
+      p_payment_method: input.paymentMethod,
+      p_address:
+        input.fulfillment === "envio"
+          ? input.address?.trim() ?? null
+          : null,
+      p_neighborhood:
+        input.fulfillment === "envio"
+          ? input.neighborhood?.trim() ?? null
+          : null,
+      p_pickup_point:
+        input.fulfillment === "retiro"
+          ? input.pickupPoint ?? null
+          : null,
+      p_shipping_cost: shippingCost,
+      p_shipping_distance_km: shippingDistanceKm,
+      p_expected_subtotal: subtotal,
+      p_shipping_pending: shippingPending,
+    })
+    .single();
+
+  if (orderError || !order) {
+    const databaseMessage = orderError?.message ?? "";
+
+    if (databaseMessage.includes("empty_cart")) {
+      return {
+        error: "empty_cart" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    if (databaseMessage.includes("insufficient_stock")) {
+      return {
+        error: "insufficient_stock" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    if (databaseMessage.includes("cart_changed")) {
+      return {
+        error: "cart_changed" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    if (databaseMessage.includes("invalid_variant")) {
+      return {
+        error: "invalid_variant" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    if (databaseMessage.includes("product_unavailable")) {
+      return {
+        error: "product_unavailable" as const,
+        whatsappUrl: null,
+      };
+    }
+
+    return {
+      error: "order_failed" as const,
+      whatsappUrl: null,
+    };
+  }
+
+  const result = order as AtomicOrderResult;
+  const orderId = result.order_id;
+  const finalSubtotal = Number(result.order_subtotal);
+  const discount = Number(result.order_discount);
+  const total = Number(result.order_total);
+
+  const paymentLabels: Record<OrderPayment, string> = {
+    efectivo: "Efectivo",
+    transferencia: "Transferencia",
+    mercadopago: "Mercado Pago (QR)",
+    tarjeta: "Débito / Crédito",
+  };
+
+  const message = [
+    shippingPending
+      ? "🥑 Pedido con envío a cotizar — Doña Ríos"
+      : "🥑 Pedido Doña Ríos",
+    `Nombre: ${customerName}`,
+    `WhatsApp: ${customerPhone}`,
+    ...lines,
+    `Subtotal: $${finalSubtotal.toLocaleString("es-AR")}`,
+    ...(discount > 0
+      ? [
+          `Descuento efectivo (10%): -$${discount.toLocaleString("es-AR")}`,
+        ]
+      : []),
+    shippingPending
+      ? "Envío: a confirmar"
+      : `Envío: $${shippingCost.toLocaleString("es-AR")}`,
+    `${shippingPending ? "Total parcial" : "Total"}: $${total.toLocaleString("es-AR")}`,
+    `Entrega: ${
+      input.fulfillment === "envio"
+        ? `Envío a ${input.address?.trim()}`
+        : `Retiro en ${input.pickupPoint ?? "punto a coordinar"}`
+    }`,
+    ...(input.fulfillment === "envio" && input.neighborhood?.trim()
+      ? [`Barrio: ${input.neighborhood.trim()}`]
+      : []),
+    `Pago: ${paymentLabels[input.paymentMethod]}`,
+    `N° de pedido: ${orderId.slice(0, 8)}`,
+    ...(shippingPending
+      ? ["", "¿Me confirman el costo de envío?"]
+      : []),
+  ].join("\n");
+
+  await admin
+    .from("orders")
+    .update({ whatsapp_message: message })
+    .eq("id", orderId);
+
+  const whatsappUrl =
+    `https://wa.me/${WHATSAPP_NUMBER}` +
+    `?text=${encodeURIComponent(message)}`;
+
+  revalidatePath("/");
+  revalidatePath("/carrito");
+  revalidatePath("/checkout");
+  revalidatePath("/admin");
+  revalidatePath("/admin/pedidos");
+
+  return {
+    error: shippingPending
+      ? ("shipping_quote_created" as const)
+      : null,
+    whatsappUrl,
+    orderId,
+    message,
+    total,
+  };
+}
+
 export async function confirmOrder(input: CheckoutInput) {
   const supabase = await createClient();
 
   const { data: auth } = await supabase.auth.getUser();
 
-  if (!auth.user) {
-    return {
-      error: "auth_required" as const,
-      whatsappUrl: null,
-    };
-  }
+ if (!auth.user) {
+  return confirmGuestOrder(input);
+}
 
   const supabaseAdmin = createAdminClient();
 
@@ -405,10 +705,12 @@ export async function getAllOrdersForAdmin() {
   const { data: orders } = await supabase
     .from("orders")
     .select(
-      `id, total, status, fulfillment, payment_method, address, neighborhood, pickup_point, shipping_cost, shipping_pending, created_at,
- profiles(full_name),
- order_items(product_name_snapshot, quantity, unit_price)`
-    )
+  `id, total, status, fulfillment, payment_method, address, neighborhood,
+   pickup_point, shipping_cost, shipping_pending, created_at,
+   customer_name, customer_phone, user_id,
+   profiles(full_name),
+   order_items(product_name_snapshot, quantity, unit_price)`
+)
     .order("created_at", { ascending: false });
 
   return orders ?? [];
@@ -572,7 +874,10 @@ export async function getPendingOrdersSummary(limit = 5) {
 
   const { data, count } = await supabase
     .from("orders")
-    .select("id, total, created_at, profiles(full_name)", { count: "exact" })
+   .select(
+  "id, total, created_at, customer_name, profiles(full_name)",
+  { count: "exact" }
+)
     .eq("status", "pendiente")
     .order("created_at", { ascending: false })
     .limit(limit);

@@ -16,7 +16,7 @@ interface CartVariantJoin {
 export default async function CheckoutPage() {
   const cart = await getCart();
 
-  if (!cart.authenticated) redirect("/login?next=/checkout");
+ 
   if (cart.items.length === 0) redirect("/carrito");
 
   const pickupPoints = await getPickupPoints(true);
@@ -42,7 +42,12 @@ export default async function CheckoutPage() {
       <Breadcrumb items={[{ label: "Inicio", href: "/" }, { label: "Carrito", href: "/carrito" }, { label: "Finalizar pedido" }]} />
       <h1 className="mb-1 text-3xl">Finalizar pedido</h1>
       <p className="mb-8 text-sm text-forest/60">Últimos datos y coordinamos el resto por WhatsApp</p>
-      <CheckoutForm lines={lines} subtotal={subtotal} pickupPoints={pickupPoints} />
+     <CheckoutForm
+  lines={lines}
+  subtotal={subtotal}
+  pickupPoints={pickupPoints}
+  authenticated={cart.authenticated}
+/>
     </div>
   );
 }

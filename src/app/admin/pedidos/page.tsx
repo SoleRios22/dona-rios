@@ -33,11 +33,19 @@ export default async function AdminOrdersPage() {
         <div className="flex flex-col gap-4">
           {orders.map((order) => {
             const customerName =
-              (
-                order.profiles as unknown as {
-                  full_name: string | null;
-                } | null
-              )?.full_name ?? "Cliente";
+  order.customer_name?.trim() ||
+  (
+    order.profiles as unknown as {
+      full_name: string | null;
+    } | null
+  )?.full_name ||
+  "Cliente";
+
+const customerPhone = order.customer_phone ?? "";
+
+const whatsappPhone = customerPhone.replace(/\D/g, "");
+
+const isGuest = order.user_id === null;
 
             return (
               <div
@@ -51,8 +59,33 @@ export default async function AdminOrdersPage() {
                     </span>
 
                     <p className="text-sm font-semibold">
-                      {customerName}
-                    </p>
+  {customerName}
+</p>
+
+{isGuest && (
+  <span className="mt-1 inline-block rounded-full bg-cream-2 px-2.5 py-1 text-xs font-semibold text-forest/70">
+    Compra como invitado
+  </span>
+)}
+
+{customerPhone && (
+  <p className="mt-2 text-xs text-forest/70">
+    WhatsApp:{" "}
+    {whatsappPhone.startsWith("549") &&
+    whatsappPhone.length === 13 ? (
+      <a
+        href={`https://wa.me/${whatsappPhone}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-semibold text-avocado-dark underline"
+      >
+        {customerPhone}
+      </a>
+    ) : (
+      <span className="font-semibold">{customerPhone}</span>
+    )}
+  </p>
+)}
 
                     <p className="text-xs text-forest/50">
                       {new Date(order.created_at).toLocaleString(

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { addToCart } from "@/lib/actions/cart";
 import { formatCurrency } from "@/lib/utils/currency";
 
@@ -24,7 +24,7 @@ export default function PurchasePanel({
   stock: number;
 }) {
   const router = useRouter();
-  const pathname = usePathname();
+  
   const [isPending, startTransition] = useTransition();
 
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(
@@ -54,17 +54,24 @@ export default function PurchasePanel({
         quantity
       );
 
-      if (result.error === "auth_required") {
-        router.push(`/login?next=${encodeURIComponent(pathname)}`);
-        return;
-      }
+     
+     if (result.error) {
+  const messages: Record<string, string> = {
+    invalid_input: "Revisá el producto y la cantidad seleccionada.",
+    product_unavailable: "Este producto ya no está disponible.",
+    invalid_variant: "La opción seleccionada ya no está disponible.",
+    insufficient_stock:
+      "No hay stock suficiente. Revisá también las unidades que ya tenés en el carrito.",
+    cart_failed:
+      "No pudimos agregar el producto. Intentá nuevamente.",
+  };
 
-      if (result.error) {
-        setError(
-          "No pudimos agregar esa cantidad. Revisá el stock e intentá nuevamente."
-        );
-        return;
-      }
+  setError(
+    messages[result.error] ??
+      "No pudimos agregar el producto. Intentá nuevamente."
+  );
+  return;
+}
 
       setAdded(true);
       router.refresh();

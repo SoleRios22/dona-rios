@@ -6,6 +6,7 @@ import { confirmOrder } from "@/lib/actions/orders";
 import { calculateShippingForAddress } from "@/lib/actions/shipping";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { OrderFulfillment, OrderPayment, PickupPoint } from "@/types/database";
+import Link from "next/link";
 
 const CASH_DISCOUNT_RATE = 0.1; // 10% de descuento pagando en efectivo 
 
@@ -26,12 +27,17 @@ export default function CheckoutForm({
   lines,
   subtotal,
   pickupPoints,
+  authenticated,
 }: {
   lines: CartLine[];
   subtotal: number;
   pickupPoints: PickupPoint[];
+  authenticated: boolean;
 }) {
   const router = useRouter();
+  const [customerName, setCustomerName] = useState("");
+const [customerPhone, setCustomerPhone] = useState("");
+const [continueAsGuest, setContinueAsGuest] = useState(false);
   const [fulfillment, setFulfillment] = useState<OrderFulfillment>("envio");
   const [address, setAddress] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
@@ -98,6 +104,20 @@ export default function CheckoutForm({
 
   function submitOrder(forceShippingQuote = false) {
     setError(null);
+    if (!authenticated) {
+  const name = customerName.trim();
+  const phone = customerPhone.replace(/\D/g, "");
+
+  if (name.length < 2 || name.length > 120) {
+    setError("Ingresá tu nombre y apellido.");
+    return;
+  }
+
+  if (phone.length < 10 || phone.length > 15) {
+    setError("Ingresá un WhatsApp válido, con código de área.");
+    return;
+  }
+}
     if (fulfillment === "envio" && !address.trim()) {
       setError("Completá la dirección de envío.");
       return;
@@ -111,19 +131,34 @@ export default function CheckoutForm({
   return;
 }
     startTransition(async () => {
-     const res = await confirmOrder({
+  const res = await confirmOrder({
   fulfillment,
   paymentMethod,
   address: fulfillment === "envio" ? address : undefined,
   neighborhood: fulfillment === "envio" ? neighborhood : undefined,
   pickupPoint: fulfillment === "retiro" ? pickupPoint : undefined,
   forceShippingQuote,
+  customerName: authenticated ? undefined : customerName.trim(),
+  customerPhone: authenticated ? undefined : customerPhone,
 });
 
-      if (res.error === "auth_required") {
-       router.push("/login?next=/checkout");
-        return;
-      }
+if (res.error === "invalid_customer_name") {
+  setError("Ingresá tu nombre y apellido.");
+  return;
+}
+
+if (res.error === "invalid_customer_phone") {
+  setError("Ingresá un WhatsApp válido, con código de área.");
+  return;
+}
+
+if (res.error === "product_unavailable") {
+  setError(
+    "Uno de los productos ya no está disponible. Volvé al carrito para revisarlo."
+  );
+  return;
+}
+    
       if (res.error === "empty_cart") {
         setError("Tu carrito está vacío.");
         return;
@@ -159,10 +194,11 @@ if (res.error === "cart_changed") {
         setError("No pudimos confirmar el pedido. Probá de nuevo.");
         return;
       }
-     const params = new URLSearchParams({
+    const params = new URLSearchParams({
   wa: res.whatsappUrl,
   total: String(res.total),
   fulfillment,
+  guest: authenticated ? "0" : "1",
 });
       router.push(`/checkout/confirmado?${params.toString()}`);
     });
@@ -174,9 +210,128 @@ function handleConfirm() {
 function handleShippingQuote() {
   submitOrder(true);
 }
+if (!authenticated && !continueAsGuest) {
+  return (
+    <section
+      aria-labelledby="checkout-access-title"
+      className="mx-auto max-w-xl rounded-2xl border border-line bg-white p-6 sm:p-8"
+    >
+      <h2 id="checkout-access-title" className="mb-3 text-2xl">
+        ¿Cómo querés continuar?
+      </h2>
+
+      <p className="mb-6 text-sm leading-relaxed text-forest/70">
+        Podés comprar sin crear una cuenta o iniciar sesión para
+        aprovechar sus beneficios.
+      </p>
+
+      <div className="mb-6 rounded-xl bg-cream-2 p-5">
+        <h3 className="mb-3 text-base font-semibold">
+          Con tu cuenta podés
+        </h3>
+
+        <ul className="list-disc space-y-2 pl-5 text-sm text-forest/80">
+          <li>Consultar tu historial y el estado de tus pedidos.</li>
+          <li>Guardar tus productos favoritos.</li>
+          <li>Conservar tu carrito asociado a tu cuenta.</li>
+          <li>Dejar reseñas de productos.</li>
+        </ul>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <Link
+          href="/login?next=/checkout"
+          className="rounded-full bg-avocado px-6 py-3.5 text-center font-semibold text-cream"
+        >
+          Iniciar sesión
+        </Link>
+
+        <button
+          type="button"
+          onClick={() => setContinueAsGuest(true)}
+          className="rounded-full border-2 border-avocado px-6 py-3.5 text-center font-semibold text-avocado-dark transition hover:bg-cream-2"
+        >
+          Continuar como invitado
+        </button>
+      </div>
+
+      <p className="mt-4 text-center text-xs text-forest/60">
+        Si iniciás sesión, los productos de tu carrito se conservan.
+      </p>
+    </section>
+  );
+}
+
   return (
     <div className="grid gap-10 md:grid-cols-[1fr_380px]">
       <div>
+        {!authenticated && (
+  <section
+    aria-labelledby="guest-details-title"
+    className="mb-6 rounded-2xl border border-line bg-white p-5 sm:p-7"
+  >
+    <h2 id="guest-details-title" className="mb-2 text-lg">
+      Tus datos
+    </h2>
+
+    <p className="mb-5 text-sm leading-relaxed text-forest/70">
+      Estás comprando como invitado. Usaremos estos datos para
+      identificar tu pedido y coordinar la entrega por WhatsApp.
+    </p>
+
+    <div className="grid gap-4 sm:grid-cols-2">
+      <label htmlFor="customer-name" className="block">
+        <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-forest/70">
+          Nombre y apellido
+        </span>
+
+        <input
+          id="customer-name"
+          name="customerName"
+          type="text"
+          autoComplete="name"
+          required
+          minLength={2}
+          maxLength={120}
+          value={customerName}
+          onChange={(event) => setCustomerName(event.target.value)}
+          disabled={isPending}
+          placeholder="Tu nombre y apellido"
+          className="w-full rounded-xl border border-line px-3.5 py-2.5 text-sm disabled:opacity-60"
+        />
+      </label>
+
+      <label htmlFor="customer-phone" className="block">
+        <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-forest/70">
+          WhatsApp
+        </span>
+
+        <input
+          id="customer-phone"
+          name="customerPhone"
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          required
+          maxLength={30}
+          value={customerPhone}
+          onChange={(event) => setCustomerPhone(event.target.value)}
+          disabled={isPending}
+          placeholder="Ej.: 358 1234567"
+          aria-describedby="customer-phone-help"
+          className="w-full rounded-xl border border-line px-3.5 py-2.5 text-sm disabled:opacity-60"
+        />
+
+        <span
+          id="customer-phone-help"
+          className="mt-1.5 block text-xs text-forest/60"
+        >
+          Incluí el código de área.
+        </span>
+      </label>
+    </div>
+  </section>
+)}
         <div className="mb-6 rounded-2xl border border-line bg-white p-7">
           <h2 className="mb-5 flex items-center gap-2.5 text-lg">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-avocado text-xs text-cream">1</span>
