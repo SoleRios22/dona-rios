@@ -243,7 +243,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       )}
 
       <section className="mx-auto max-w-[1180px] px-6 py-12 md:px-8">
-        <ProductTabs description={product.description ?? ""} nutrition={product.nutrition} />
+       <ProductTabs
+  description={product.description ?? ""}
+  nutritionImageUrl={product.nutrition_image_url}
+  productName={product.name}
+/>
       </section>
 
       <section id="reviews" className="mx-auto max-w-[1180px] px-6 py-6 pb-16 md:px-8">

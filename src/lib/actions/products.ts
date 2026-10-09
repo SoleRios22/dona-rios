@@ -18,6 +18,7 @@ export interface ProductFormInput {
   suitableFor: string;
   colorway: string;
   imageUrl: string | null;
+  nutritionImageUrl: string | null;
   isBox: boolean;
   isActive: boolean;
   stock: number;
@@ -94,7 +95,7 @@ export async function getProductForEdit(id: string) {
   const { data } = await supabase
     .from("products")
     .select(
-      `id, slug, name, short_description, description, price, old_price, unit, origin, suitable_for, colorway, image_url, is_box, is_active, stock,
+      `id, slug, name, short_description, description, price, old_price, unit, origin, suitable_for, colorway, image_url,colorway, image_url, nutrition_image_url, is_box, is_active, stock, is_box, is_active, stock,
        product_tags(tag), product_subcategories(subcategory_id), product_variants(id, label, price_delta, is_default), product_nutrition(label, value, sort_order)`
     )
     .eq("id", id)
@@ -124,7 +125,7 @@ export async function createProduct(
 
   const { data: productId, error: saveError } =
     await supabaseAdmin.rpc(
-      "save_product_atomic",
+      "save_product_with_nutrition_image",
       buildProductRpcInput(null, input)
     );
 
@@ -158,7 +159,7 @@ export async function updateProduct(
 
   const { data: productId, error: saveError } =
     await supabaseAdmin.rpc(
-      "save_product_atomic",
+      "save_product_with_nutrition_image",
       buildProductRpcInput(id, input)
     );
 
@@ -196,6 +197,7 @@ function buildProductRpcInput(
     p_suitable_for: input.suitableFor,
     p_colorway: input.colorway,
     p_image_url: input.imageUrl,
+    p_nutrition_image_url: input.nutritionImageUrl,
     p_is_box: input.isBox,
     p_is_active: input.isActive,
     p_stock: input.stock,

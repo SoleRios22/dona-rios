@@ -61,6 +61,7 @@ export default async function EditProductPage({
         suitableFor: product.suitable_for ?? "",
         colorway: product.colorway,
         imageUrl: product.image_url,
+        nutritionImageUrl: product.nutrition_image_url ?? null,
         isBox: product.is_box,
         isActive: product.is_active,
         stock: product.stock,

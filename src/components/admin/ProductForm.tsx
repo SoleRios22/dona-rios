@@ -2,11 +2,21 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createProduct, updateProduct, type ProductFormInput } from "@/lib/actions/products";
-import { CATEGORY_LABELS, type CategoryTag, type Subcategory } from "@/types/database";
+import {
+  createProduct,
+  updateProduct,
+  type ProductFormInput,
+} from "@/lib/actions/products";
+import {
+  CATEGORY_LABELS,
+  type CategoryTag,
+  type Subcategory,
+} from "@/types/database";
 import { slugify } from "@/lib/utils/slugify";
 import ImageUploader from "@/components/admin/ImageUploader";
-import BoxItemPicker, { type BoxItemState } from "@/components/admin/BoxItemPicker";
+import BoxItemPicker, {
+  type BoxItemState,
+} from "@/components/admin/BoxItemPicker";
 
 interface Props {
   mode: "create" | "edit";
@@ -40,7 +50,7 @@ export default function ProductForm({
   availableSubcategories,
   availableProducts,
   returnTo = "/admin/productos",
-}: Props)  {
+}: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -48,28 +58,50 @@ export default function ProductForm({
 
   const [name, setName] = useState(initial?.name ?? "");
   const [slug, setSlug] = useState(initial?.slug ?? "");
-  const [shortDescription, setShortDescription] = useState(initial?.shortDescription ?? "");
+  const [shortDescription, setShortDescription] = useState(
+    initial?.shortDescription ?? ""
+  );
   const [description, setDescription] = useState(initial?.description ?? "");
   const [price, setPrice] = useState(initial?.price?.toString() ?? "");
-  const [oldPrice, setOldPrice] = useState(initial?.oldPrice?.toString() ?? "");
+  const [oldPrice, setOldPrice] = useState(
+    initial?.oldPrice?.toString() ?? ""
+  );
   const [unit, setUnit] = useState(initial?.unit ?? "");
   const [origin, setOrigin] = useState(initial?.origin ?? "");
   const [suitableFor, setSuitableFor] = useState(initial?.suitableFor ?? "");
   const [colorway, setColorway] = useState(initial?.colorway ?? "clay");
-  const [imageUrl, setImageUrl] = useState<string | null>(initial?.imageUrl ?? null);
+  const [imageUrl, setImageUrl] = useState<string | null>(
+    initial?.imageUrl ?? null
+  );
+  const [nutritionImageUrl, setNutritionImageUrl] = useState<string | null>(
+    initial?.nutritionImageUrl ?? null
+  );
   const [isBox, setIsBox] = useState(initial?.isBox ?? false);
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
   const [stock, setStock] = useState(initial?.stock?.toString() ?? "0");
   const [tags, setTags] = useState<CategoryTag[]>(initial?.tags ?? []);
-  const [subcategoryIds, setSubcategoryIds] = useState<string[]>(initial?.subcategoryIds ?? []);
+  const [subcategoryIds, setSubcategoryIds] = useState<string[]>(
+    initial?.subcategoryIds ?? []
+  );
   const [variants, setVariants] = useState(initial?.variants ?? []);
-  const [nutrition, setNutrition] = useState(initial?.nutrition ?? []);
+
+  // Conserva los datos nutricionales anteriores sin editarlos.
+  const nutrition = initial?.nutrition ?? [];
+
   const [boxItems, setBoxItems] = useState<BoxItemState[]>(
-    (initial?.boxItems ?? []).map((b) => ({ productId: b.productId, quantity: b.quantity, name: b.name ?? "" }))
+    (initial?.boxItems ?? []).map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      name: item.name ?? "",
+    }))
   );
 
   function toggleSubcategory(id: string) {
-    setSubcategoryIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    setSubcategoryIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((item) => item !== id)
+        : [...prev, id]
+    );
   }
 
   function handleNameChange(value: string) {
@@ -78,31 +110,41 @@ export default function ProductForm({
   }
 
   function toggleTag(tag: CategoryTag) {
-    setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+    setTags((prev) =>
+      prev.includes(tag)
+        ? prev.filter((item) => item !== tag)
+        : [...prev, tag]
+    );
   }
 
   function addVariant() {
-    setVariants((prev) => [...prev, { label: "", priceDelta: 0, isDefault: prev.length === 0 }]);
+    setVariants((prev) => [
+      ...prev,
+      {
+        label: "",
+        priceDelta: 0,
+        isDefault: prev.length === 0,
+      },
+    ]);
   }
-  function updateVariant(index: number, patch: Partial<(typeof variants)[number]>) {
-    setVariants((prev) => prev.map((v, i) => (i === index ? { ...v, ...patch } : v)));
+
+  function updateVariant(
+    index: number,
+    patch: Partial<(typeof variants)[number]>
+  ) {
+    setVariants((prev) =>
+      prev.map((variant, i) =>
+        i === index ? { ...variant, ...patch } : variant
+      )
+    );
   }
+
   function removeVariant(index: number) {
     setVariants((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function addNutrition() {
-    setNutrition((prev) => [...prev, { label: "", value: "" }]);
-  }
-  function updateNutrition(index: number, patch: Partial<(typeof nutrition)[number]>) {
-    setNutrition((prev) => prev.map((n, i) => (i === index ? { ...n, ...patch } : n)));
-  }
-  function removeNutrition(index: number) {
-    setNutrition((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
     setError(null);
 
     if (!name.trim() || !slug.trim() || !price) {
@@ -122,19 +164,25 @@ export default function ProductForm({
       suitableFor: suitableFor.trim(),
       colorway,
       imageUrl,
+      nutritionImageUrl,
       isBox,
       isActive,
       stock: Number(stock) || 0,
       tags,
       subcategoryIds,
-      variants: variants.filter((v) => v.label.trim()),
-      nutrition: nutrition.filter((n) => n.label.trim()),
-      boxItems: boxItems.map(({ productId, quantity }) => ({ productId, quantity })),
+      variants: variants.filter((variant) => variant.label.trim()),
+      nutrition,
+      boxItems: boxItems.map(({ productId, quantity }) => ({
+        productId,
+        quantity,
+      })),
     };
 
     startTransition(async () => {
       const result =
-        mode === "create" ? await createProduct(input) : await updateProduct(productId!, input);
+        mode === "create"
+          ? await createProduct(input)
+          : await updateProduct(productId!, input);
 
       if (result.error) {
         setError(result.error);
@@ -146,32 +194,52 @@ export default function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl">
-      <h1 className="mb-8 text-3xl">{mode === "create" ? "Nuevo producto" : "Editar producto"}</h1>
+      <h1 className="mb-8 text-3xl">
+        {mode === "create" ? "Nuevo producto" : "Editar producto"}
+      </h1>
 
-      {error && <p className="mb-6 rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay">{error}</p>}
+      {error && (
+        <p
+          role="alert"
+          className="mb-6 rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay"
+        >
+          {error}
+        </p>
+      )}
 
       <Section title="Datos básicos">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Nombre" className="col-span-2">
-            <input value={name} onChange={(e) => handleNameChange(e.target.value)} className={inputClass} />
+          <Field label="Nombre" className="sm:col-span-2">
+            <input
+              value={name}
+              onChange={(event) => handleNameChange(event.target.value)}
+              className={inputClass}
+            />
           </Field>
-          <Field label="Slug (URL)" className="col-span-2">
+
+          <Field label="Slug (URL)" className="sm:col-span-2">
             <input
               value={slug}
-              onChange={(e) => {
+              onChange={(event) => {
                 setSlugTouched(true);
-                setSlug(e.target.value);
+                setSlug(event.target.value);
               }}
               className={inputClass}
             />
           </Field>
-          <Field label="Descripción breve" className="col-span-2">
-            <input value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} className={inputClass} />
+
+          <Field label="Descripción breve" className="sm:col-span-2">
+            <input
+              value={shortDescription}
+              onChange={(event) => setShortDescription(event.target.value)}
+              className={inputClass}
+            />
           </Field>
-          <Field label="Descripción completa" className="col-span-2">
+
+          <Field label="Descripción completa" className="sm:col-span-2">
             <textarea
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(event) => setDescription(event.target.value)}
               className={`${inputClass} min-h-24 resize-y`}
             />
           </Field>
@@ -181,16 +249,38 @@ export default function ProductForm({
       <Section title="Precio y stock">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Precio">
-            <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className={inputClass} />
+            <input
+              type="number"
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+              className={inputClass}
+            />
           </Field>
+
           <Field label="Precio anterior (opcional)">
-            <input type="number" value={oldPrice} onChange={(e) => setOldPrice(e.target.value)} className={inputClass} />
+            <input
+              type="number"
+              value={oldPrice}
+              onChange={(event) => setOldPrice(event.target.value)}
+              className={inputClass}
+            />
           </Field>
+
           <Field label="Unidad (ej: Frasco de 400g)">
-            <input value={unit} onChange={(e) => setUnit(e.target.value)} className={inputClass} />
+            <input
+              value={unit}
+              onChange={(event) => setUnit(event.target.value)}
+              className={inputClass}
+            />
           </Field>
+
           <Field label="Stock">
-            <input type="number" value={stock} onChange={(e) => setStock(e.target.value)} className={inputClass} />
+            <input
+              type="number"
+              value={stock}
+              onChange={(event) => setStock(event.target.value)}
+              className={inputClass}
+            />
           </Field>
         </div>
       </Section>
@@ -202,16 +292,25 @@ export default function ProductForm({
               key={tag}
               type="button"
               onClick={() => toggleTag(tag)}
+              aria-pressed={tags.includes(tag)}
               className={`rounded-full border-2 px-4 py-2 text-sm font-semibold transition ${
-                tags.includes(tag) ? "border-avocado bg-avocado text-cream" : "border-line bg-white"
+                tags.includes(tag)
+                  ? "border-avocado bg-avocado text-cream"
+                  : "border-line bg-white"
               }`}
             >
               {CATEGORY_LABELS[tag].emoji} {CATEGORY_LABELS[tag].label}
             </button>
           ))}
         </div>
+
         <label className="mt-4 flex items-center gap-2 text-sm font-medium">
-          <input type="checkbox" checked={isBox} onChange={(e) => setIsBox(e.target.checked)} className="h-4 w-4 accent-avocado" />
+          <input
+            type="checkbox"
+            checked={isBox}
+            onChange={(event) => setIsBox(event.target.checked)}
+            className="h-4 w-4 accent-avocado"
+          />
           Es un box armado (⭐)
         </label>
       </Section>
@@ -219,45 +318,69 @@ export default function ProductForm({
       {isBox && (
         <Section title="Contenido del combo">
           <p className="mb-4 text-sm text-forest/60">
-            Buscá y agregá los productos que ya tenés cargados. Podés ajustar la cantidad de cada uno.
+            Buscá y agregá los productos que ya tenés cargados. Podés
+            ajustar la cantidad de cada uno.
           </p>
-          <BoxItemPicker availableProducts={availableProducts} value={boxItems} onChange={setBoxItems} />
+
+          <BoxItemPicker
+            availableProducts={availableProducts}
+            value={boxItems}
+            onChange={setBoxItems}
+          />
         </Section>
       )}
 
       <Section title="Subcategorías (opcional)">
         {tags.length === 0 ? (
-          <p className="text-sm text-forest/50">Elegí al menos una categoría principal arriba para ver sus subcategorías.</p>
+          <p className="text-sm text-forest/50">
+            Elegí al menos una categoría principal arriba para ver sus
+            subcategorías.
+          </p>
         ) : (
           <div className="flex flex-col gap-4">
             {tags.map((tag) => {
-              const options = availableSubcategories.filter((s) => s.parent_tag === tag);
+              const options = availableSubcategories.filter(
+                (subcategory) => subcategory.parent_tag === tag
+              );
+
               if (options.length === 0) return null;
+
               return (
                 <div key={tag}>
                   <span className="mb-2 block text-xs font-bold uppercase tracking-wide text-forest/60">
-                    {CATEGORY_LABELS[tag].emoji} {CATEGORY_LABELS[tag].label}
+                    {CATEGORY_LABELS[tag].emoji}{" "}
+                    {CATEGORY_LABELS[tag].label}
                   </span>
+
                   <div className="flex flex-wrap gap-2">
-                    {options.map((s) => (
+                    {options.map((subcategory) => (
                       <button
-                        key={s.id}
+                        key={subcategory.id}
                         type="button"
-                        onClick={() => toggleSubcategory(s.id)}
+                        onClick={() => toggleSubcategory(subcategory.id)}
+                        aria-pressed={subcategoryIds.includes(subcategory.id)}
                         className={`rounded-full border-2 px-3.5 py-1.5 text-sm font-medium transition ${
-                          subcategoryIds.includes(s.id) ? "border-avocado bg-avocado text-cream" : "border-line bg-white"
+                          subcategoryIds.includes(subcategory.id)
+                            ? "border-avocado bg-avocado text-cream"
+                            : "border-line bg-white"
                         }`}
                       >
-                        {s.name}
+                        {subcategory.name}
                       </button>
                     ))}
                   </div>
                 </div>
               );
             })}
+
             <p className="text-xs text-forest/50">
               ¿Falta alguna? Podés crearlas desde{" "}
-              <a href="/admin/subcategorias" target="_blank" className="underline">
+              <a
+                href="/admin/subcategorias"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
                 Subcategorías
               </a>
               .
@@ -268,77 +391,99 @@ export default function ProductForm({
 
       <Section title="Variantes de peso/volumen (opcional)">
         <div className="flex flex-col gap-3">
-          {variants.map((v, i) => (
-            <div key={i} className="flex flex-wrap items-center gap-2">
+          {variants.map((variant, index) => (
+            <div
+              key={index}
+              className="flex flex-wrap items-center gap-2"
+            >
               <input
                 placeholder="Ej: 400g"
-                value={v.label}
-                onChange={(e) => updateVariant(i, { label: e.target.value })}
+                value={variant.label}
+                onChange={(event) =>
+                  updateVariant(index, { label: event.target.value })
+                }
                 className={`${inputClass} flex-1`}
               />
+
               <input
                 type="number"
                 placeholder="Diferencia de precio"
-                value={v.priceDelta}
-                onChange={(e) => updateVariant(i, { priceDelta: Number(e.target.value) })}
+                value={variant.priceDelta}
+                onChange={(event) =>
+                  updateVariant(index, {
+                    priceDelta: Number(event.target.value),
+                  })
+                }
                 className={`${inputClass} w-40`}
               />
+
               <label className="flex items-center gap-1.5 text-xs whitespace-nowrap">
                 <input
                   type="radio"
                   name="defaultVariant"
-                  checked={v.isDefault}
-                  onChange={() => setVariants((prev) => prev.map((x, xi) => ({ ...x, isDefault: xi === i })))}
+                  checked={variant.isDefault}
+                  onChange={() =>
+                    setVariants((prev) =>
+                      prev.map((item, i) => ({
+                        ...item,
+                        isDefault: i === index,
+                      }))
+                    )
+                  }
                   className="accent-avocado"
                 />
                 Por defecto
               </label>
-              <button type="button" onClick={() => removeVariant(i)} className="text-clay">
+
+              <button
+                type="button"
+                onClick={() => removeVariant(index)}
+                aria-label={`Quitar variante ${variant.label || index + 1}`}
+                className="text-clay"
+              >
                 ×
               </button>
             </div>
           ))}
-          <button type="button" onClick={addVariant} className="self-start text-sm font-semibold text-avocado-dark underline">
+
+          <button
+            type="button"
+            onClick={addVariant}
+            className="self-start text-sm font-semibold text-avocado-dark underline"
+          >
             + Agregar variante
           </button>
         </div>
       </Section>
 
-      <Section title="Información nutricional (opcional)">
-        <div className="flex flex-col gap-3">
-          {nutrition.map((n, i) => (
-            <div key={i} className="flex flex-wrap items-center gap-2">
-              <input
-                placeholder="Ej: Carbohidratos"
-                value={n.label}
-                onChange={(e) => updateNutrition(i, { label: e.target.value })}
-                className={`${inputClass} flex-1`}
-              />
-              <input
-                placeholder="Ej: 7,2g"
-                value={n.value}
-                onChange={(e) => updateNutrition(i, { value: e.target.value })}
-                className={`${inputClass} w-40`}
-              />
-              <button type="button" onClick={() => removeNutrition(i)} className="text-clay">
-                ×
-              </button>
-            </div>
-          ))}
-          <button type="button" onClick={addNutrition} className="self-start text-sm font-semibold text-avocado-dark underline">
-            + Agregar dato nutricional
-          </button>
-        </div>
+      <Section title="Etiqueta nutricional (opcional)">
+        <ImageUploader
+          value={nutritionImageUrl}
+          onChange={setNutritionImageUrl}
+          colorway={colorway}
+          isBox={false}
+          kind="nutrition"
+        />
       </Section>
 
       <Section title="Imagen">
-        <ImageUploader value={imageUrl} onChange={setImageUrl} colorway={colorway} isBox={isBox} />
+        <ImageUploader
+          value={imageUrl}
+          onChange={setImageUrl}
+          colorway={colorway}
+          isBox={isBox}
+        />
+
         <div className="mt-5">
           <Field label="Color de la ilustración (si no subís imagen)">
-            <select value={colorway} onChange={(e) => setColorway(e.target.value)} className={inputClass}>
-              {COLORWAYS.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
+            <select
+              value={colorway}
+              onChange={(event) => setColorway(event.target.value)}
+              className={inputClass}
+            >
+              {COLORWAYS.map((color) => (
+                <option key={color.value} value={color.value}>
+                  {color.label}
                 </option>
               ))}
             </select>
@@ -349,13 +494,27 @@ export default function ProductForm({
       <Section title="Más datos">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Origen">
-            <input value={origin} onChange={(e) => setOrigin(e.target.value)} className={inputClass} />
+            <input
+              value={origin}
+              onChange={(event) => setOrigin(event.target.value)}
+              className={inputClass}
+            />
           </Field>
+
           <Field label="Apto para">
-            <input value={suitableFor} onChange={(e) => setSuitableFor(e.target.value)} className={inputClass} />
+            <input
+              value={suitableFor}
+              onChange={(event) => setSuitableFor(event.target.value)}
+              className={inputClass}
+            />
           </Field>
+
           <Field label="Visible en la tienda">
-            <select value={isActive ? "1" : "0"} onChange={(e) => setIsActive(e.target.value === "1")} className={inputClass}>
+            <select
+              value={isActive ? "1" : "0"}
+              onChange={(event) => setIsActive(event.target.value === "1")}
+              className={inputClass}
+            >
               <option value="1">Sí, activo</option>
               <option value="0">No, oculto</option>
             </select>
@@ -363,15 +522,27 @@ export default function ProductForm({
         </div>
       </Section>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <button
           type="submit"
           disabled={isPending}
           className="rounded-full bg-avocado px-8 py-3.5 font-semibold text-cream shadow-[0_5px_0_var(--color-avocado-dark)] disabled:opacity-60"
         >
-          {isPending ? "Guardando..." : mode === "create" ? "Crear producto" : "Guardar cambios"}
+          {isPending
+            ? "Guardando..."
+            : mode === "create"
+              ? "Crear producto"
+              : "Guardar cambios"}
         </button>
-        <button type="button" onClick={() => router.push(mode === "edit" ? returnTo : "/admin")} className="rounded-full border-2 border-forest px-8 py-3.5 font-semibold">
+
+        <button
+          type="button"
+          disabled={isPending}
+          onClick={() =>
+            router.push(mode === "edit" ? returnTo : "/admin")
+          }
+          className="rounded-full border-2 border-forest px-8 py-3.5 font-semibold disabled:opacity-60"
+        >
           Cancelar
         </button>
       </div>
@@ -379,9 +550,16 @@ export default function ProductForm({
   );
 }
 
-const inputClass = "w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm";
+const inputClass =
+  "w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-sm";
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="mb-8 rounded-2xl border border-line bg-white p-6">
       <h2 className="mb-4 text-lg">{title}</h2>
@@ -390,10 +568,20 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Field({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
+function Field({
+  label,
+  children,
+  className = "",
+}: {
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <label className={`block ${className}`}>
-      <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-forest/70">{label}</span>
+      <span className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-forest/70">
+        {label}
+      </span>
       {children}
     </label>
   );

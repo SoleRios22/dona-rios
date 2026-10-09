@@ -86,7 +86,7 @@ export async function getProductBySlug(slug: string) {
   const { data: product, error } = await supabase
     .from("products")
     .select(
-      `id, slug, name, short_description, description, price, old_price, unit, origin, suitable_for, colorway, is_box, stock, image_url,
+      `id, slug, name, short_description, description, price, old_price, unit, origin, suitable_for, colorway, is_box, stock, image_url, nutrition_image_url,
        product_tags(tag),
        product_variants(id, label, price_delta, is_default),
        product_nutrition(label, value, sort_order)`
@@ -138,6 +138,7 @@ export async function getProductBySlug(slug: string) {
     is_box: product.is_box,
     stock: product.stock,
     image_url: product.image_url,
+    nutrition_image_url: product.nutrition_image_url ?? null,
     tags: (product.product_tags ?? []).map((t) => t.tag as CategoryTag),
     variants: product.product_variants ?? [],
     nutrition: (product.product_nutrition ?? []).sort((a, b) => a.sort_order - b.sort_order),
